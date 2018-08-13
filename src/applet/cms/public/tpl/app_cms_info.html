@@ -1,0 +1,41 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">后台用户</h1>
+</div>
+<div class="wrapper-md">
+    <div>
+        <form class="form-inline" role="form">
+            <div class="form-group m-r-md">
+                <label>登录帐号</label>
+                <input class="form-control" type="text" ng-model="vm.userName" placeholder="请输入部分或全部帐号">
+            </div>
+
+            <button class="btn btn-info" ng-click="vm.getInfo(1)">查询</button>
+            <button class="btn btn-info" ng-click="vm.cmsCreate()">创建</button>
+        </form>
+
+        <div style="overflow-x:auto">
+            <table class='table table-bordered'>
+                <caption>
+                    <h3><!--仅作排版 --></h3>
+                </caption>
+                <thead>
+                    <tr ng-show="vm.tableData&&vm.tableData.length > 0">
+                        <th ng-repeat='name in vm.tableName track by $index'>{{name}}</th>
+                        <th>操作管理</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat='data in vm.tableData track by $index'>
+                        <td ng-repeat='column in data track by $index' title='{{column}}'> {{column.toString().length<20?column:column.substring(0,20)+'...'}}</td>
+                        <td>
+
+                            <button class="btn btn-info" ng-click="vm.cmsPwd(data)">密码</button>
+                            <button class="btn btn-info" ng-click="vm.cmsDelete(data)">删除</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <tm-pagination conf="vm.paginationConf"></tm-pagination>
+        </div>
+    </div>
+</div>

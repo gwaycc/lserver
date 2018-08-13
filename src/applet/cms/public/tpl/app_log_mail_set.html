@@ -1,0 +1,56 @@
+<div class="modal-body wrapper-lg">
+    <div class="form-horizontal">
+
+        <label class="text-center" style="width:100%">邮件设置</label>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >SMTP服务器</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="text" ng-model="smtpHost" placeholder="请输入服务器域名"
+                />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >SMTP端口</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="text" ng-model="smtpPort" placeholder="请输入服务器端口, 不填默认为25"
+                />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >登录账号</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="text" ng-model="mAuthName" placeholder="请输入登录账号"
+                />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >登录密码</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="password" ng-model="mAuthPwd" placeholder="请输入登录密码"
+                />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >操作密码</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="password" ng-model="authPwd" validator="required"
+                no-validation-message="true" placeholder="请输入操作密码" />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="ngdialog-buttons mt">
+            <button class="ngdialog-button btn btn-info" ng-click='commit();'>确定</button>
+        </div>
+    </div>
+</div>

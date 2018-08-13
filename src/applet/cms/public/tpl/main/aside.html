@@ -1,0 +1,26 @@
+<div class="aside-wrap" ng-controller="MainCtrl">
+  <div class="navi-wrap">
+    <!-- user -->
+    <div class="clearfix hidden-xs text-center hide" id="aside-user">
+      <div class="dropdown wrapper">
+		  <span class="thumb-lg w-auto-folded avatar m-t-sm">
+			  <img ng-src="{{user.logo}}" class="img-full" alt="...">
+		  </span>
+          <span class="clear hidden-folded">
+              <span class="block m-t-sm">
+                <strong class="font-bold text-lt">{{user.nickname}}</strong> 
+              </span>
+          </span>
+      </div>
+      <div class="line dk hidden-folded"></div>
+    </div>
+    <!-- / user -->
+
+    <!-- nav -->
+    <nav ui-nav class="navi" ng-include="'/tpl/main/nav.html?v=' + app.version "></nav>
+    <!-- nav -->
+
+    <!-- aside footer -->
+    <!-- / aside footer -->
+  </div>
+</div>

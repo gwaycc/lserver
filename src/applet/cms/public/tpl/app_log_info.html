@@ -1,0 +1,68 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">日志查询</h1>
+</div>
+<div class="wrapper-md">
+    <div>
+        <form class="form-inline" role="form">
+            <div class="form-group m-r-md">
+                <label>平台</label>
+                <input class="form-control" type="text" ng-model="vm.platform" placeholder="请输入系统平台">
+            </div>
+            <div class="form-group m-r-md">
+                <label>级别</label>
+                <input class="form-control" type="tel" ng-model="vm.level" placeholder="请输入日志级别">
+            </div>
+            <div class="form-group m-r-md">
+                <label>日志器</label>
+                <input class="form-control" type="text" ng-model="vm.logger" placeholder="请输入日志器">
+            </div>
+            <div class="form-group m-r-md">
+                <label>消息</label>
+                <input class="form-control" type="text" ng-model="vm.msg" placeholder="请输入消息体,模糊查询(慢)">
+            </div>
+
+            <br/>
+            <div class="form-group m-r-md">
+                <label>MD5</label>
+                <input class="form-control" type="text" ng-model="vm.md5" placeholder="请输入MD5值或部分值">
+            </div>
+
+            <br/>
+            <label class="control-label">开始</label>
+            <div class="form-group m-r-md">
+                <input class="form-control r-o" date-time ng-model="vm.start_time" view="date"
+                auto-close="true" readonly>
+            </div>
+            <label class='control-label'>结束</label>
+            <div class="form-group m-r-md">
+                <input class="form-control r-o" date-time ng-model="vm.end_time" view="date" auto-close="true"
+                readonly>
+            </div>
+
+            <button class="btn btn-info" ng-click="vm.getInfo(1)">查询</button>
+        </form>
+
+        <div style="overflow-x:auto">
+            <table class='table table-bordered'>
+                <caption>
+                    <h3><!--仅作排版 --></h3>
+                </caption>
+                <thead>
+                    <tr ng-show="vm.tableData&&vm.tableData.length > 0">
+                        <th ng-repeat='name in vm.tableName track by $index'>{{name}}</th>
+                        <th>操作管理</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat='data in vm.tableData track by $index'>
+                        <td ng-repeat='column in data track by $index' title='{{column}}'> {{column.toString().length<20?column:column.substring(0,20)+'...'}}</td>
+                        <td>
+                            <button class="btn btn-info" ng-click="vm.detail(data[7])">详情</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <tm-pagination conf="vm.paginationConf"></tm-pagination>
+        </div>
+    </div>
+</div>

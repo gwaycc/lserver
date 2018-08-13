@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="app">
+
+<head>
+    <meta charset="utf-8" />
+    <title>{{.name}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="stylesheet" href="/css/bootstrap.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/animate.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/font-awesome.min.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/simple-line-icons.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/font.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/app.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/ngDialog.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/ngDialog-flat.css?v={{.version}}" />
+    <link rel="stylesheet" href="/css/ngDialog-theme-default.css?v={{.version}}">
+    <link rel="stylesheet" href="/css/datepicker.css?v={{.version}}" />
+    <!--添加css后，应在min.sh中也添加，以方便生成发布的压缩文件 -->
+</head>
+
+<body ng-controller="AppCtrl">
+    <!-- 系统信息 -->
+    <input type="hidden" id="app.name" value='{{.name}}' />
+    <input type="hidden" id="app.version" value='{{.version}}' />
+
+    <!-- 页面模板 -->
+    <div class="app" id="app" ng-class="{'app-header-fixed':app.settings.headerFixed, 'app-aside-fixed':app.settings.asideFixed, 'app-aside-folded':app.settings.asideFolded, 'app-aside-dock':app.settings.asideDock, 'container':app.settings.container}" ui-view></div>
+    <script src="/vendor/jquery/jquery.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-file-upload-shim.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-file-upload.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-cookies.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-animate.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-ui-router.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-translate.js?v={{.version}}"></script>
+    <script src="/vendor/angular/ngStorage.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/ocLazyLoad.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/ui-load.js?v={{.version}}"></script>
+    <script src="/vendor/angular/ui-jq.js?v={{.version}}"></script>
+    <script src="/vendor/angular/ui-validate.js?v={{.version}}"></script>
+    <script src="/vendor/angular/ui-bootstrap-tpls.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/textAngular.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/textAngular-rangy.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/textAngular-sanitize.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/angular-spinner.min.js?v={{.version}}"></script>
+    <script src="/vendor/angular/spin.min.js?v={{.version}}"></script>
+
+    <script src="/js/libs/moment.js?v={{.version}}"></script>
+    <script src="/js/libs/area.js?v={{.version}}"></script>
+    <script src="/js/libs/ngDialog.js?v={{.version}}"></script>
+    <script src="/js/libs/tm.pagination.js?v={{.version}}"></script>
+    <script src="/js/libs/ichart.1.2.min.js?v={{.version}}"></script>
+    <script src="/js/libs/bootstrap.min.js?v={{.version}}"></script>
+    <script src="/js/libs/angular-datepicker.js?v={{.version}}"></script>
+    <script src="/js/libs/angular-validation.js?v={{.version}}"></script>
+    <script src="/js/libs/angular-validation-rule.js?v={{.version}}"></script>
+
+    <script src="/js/app/services.js?v={{.version}}"></script>
+    <script src="/js/app/filters.js?v={{.version}}"></script>
+    <script src="/js/app/directives.js?v={{.version}}"></script>
+    <script src="/js/app/main.js?v={{.version}}"></script>
+    <script src="/js/app/access.js?v={{.version}}"></script>
+    <script src="/js/app/cms.js?v={{.version}}"></script>
+    <script src="/js/app/log.js?v={{.version}}"></script>
+    <script src="/js/app.js?v={{.version}}"></script>
+    <!--添加js后，应在min.sh中也添加，以方便生成发布的压缩文件 -->
+</body>
+
+</html>

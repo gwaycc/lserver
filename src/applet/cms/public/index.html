@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="app">
+    <head>
+        <meta charset="utf-8" />
+        <title>{{.name}}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="stylesheet" href="/css/app.min.css?v={{.version}}" />
+        <!--添加css后，应在min.sh中也添加，以方便生成发布的压缩文件 -->
+    </head>
+
+    <body ng-controller="AppCtrl">
+        <!-- 系统信息 -->
+        <input type="hidden" id="app.name" value='{{.name}}' />
+        <input type="hidden" id="app.version" value='{{.version}}' />
+
+
+        <!-- 页面模板 -->
+        <div class="app" id="app" ng-class="{'app-header-fixed':app.settings.headerFixed, 'app-aside-fixed':app.settings.asideFixed, 'app-aside-folded':app.settings.asideFolded, 'app-aside-dock':app.settings.asideDock, 'container':app.settings.container}" ui-view></div>
+        <script src="/js/app.min.js?v={{.version}}"></script>
+        <!--添加js后，应在min.sh中也添加，以方便生成发布的压缩文件 -->
+    </body>
+</html>

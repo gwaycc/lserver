@@ -1,0 +1,30 @@
+<div class="bg-light lter b-b wrapper-md">
+  <h1 class="m-n font-thin h3">邮件设置</h1>
+</div>
+<div class="wrapper-md">
+  <div>
+    <div style="overflow-x:auto">
+      <table class='table table-bordered'>
+        <caption>
+          <h3><!--仅作排版 --></h3>
+        </caption>
+        <thead>
+          <tr ng-show="vm.tableData&&vm.tableData.length > 0">
+            <th ng-repeat='name in vm.tableName track by $index'>{{name}}</th>
+            <th>操作管理</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat='data in vm.tableData track by $index'>
+            <td ng-repeat='column in data track by $index' title='{{column}}'> {{column.toString().length
+              <20?column:column.substring(0,20)+ '...'}}</td>
+                <td>
+                  <button class="btn btn-info" ng-click="vm.set(data)">修改</button>
+                </td>
+          </tr>
+        </tbody>
+      </table>
+      <tm-pagination conf="vm.paginationConf"></tm-pagination>
+    </div>
+  </div>
+</div>

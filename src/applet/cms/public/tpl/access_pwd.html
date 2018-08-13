@@ -1,0 +1,35 @@
+<div class="modal-body wrapper-lg">
+    <form name="form" class="form-horizontal">
+        <label class="text-center" style="width:100%">修改密码</label>
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >原密码</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="password" ng-model="oldPwd" placeholder="请输入原密码"
+                no-validation-message="true" validator="required" autofocus />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >新密码</label>
+            <div class="col-md-9" >
+                <input name="newPwd" class="form-control" type="password" ng-model="newPwd" placeholder="请输入8-12位新密码"
+                validator="password" />
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="form-group" style="margin-bottom:0px">
+            <label class="col-md-3" >确认密码</label>
+            <div class="col-md-9" >
+                <input class="form-control" type="password" ng-model="rePwd" placeholder="请重复新密码">
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b"></div>
+        <div class="ngdialog-buttons mt">
+            <button class="ngdialog-button btn btn-info" ng-disabled="form.$invalid" ng-click='commit();'>确定</button>
+        </div>
+    </form>
+</div>

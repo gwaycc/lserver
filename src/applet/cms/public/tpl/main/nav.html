@@ -1,0 +1,76 @@
+<!-- first -->
+<ul class="nav">
+    <li ng-show="Auth('app.cms')">
+        <a href class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="glyphicon glyphicon-th-large icon-layers text-info-dker"></i>
+            <span class="font-bold">系统管理</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href>
+                    <span>系统管理</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.cms.info')" ui-sref-active="active">
+                <a ui-sref="app.cms.info">
+                    <span>用户管理</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.cms.priv')" ui-sref-active="active">
+                <a ui-sref="app.cms.priv">
+                    <span>权限管理</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.cms.privtpl')" ui-sref-active="active">
+                <a ui-sref="app.cms.privtpl">
+                    <span>权限模板</span>
+                </a>
+            </li>
+
+            <li ng-show="Auth('app.cms.log')" ui-sref-active="active">
+                <a ui-sref="app.cms.log">
+                    <span>操作日志</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-show="Auth('app.log')">
+        <a href class="auto">
+            <span class="pull-right text-muted">
+                <i class="fa fa-fw fa-angle-right text"></i>
+                <i class="fa fa-fw fa-angle-down text-active"></i>
+            </span>
+            <i class="glyphicon glyphicon-th-large icon-layers text-info-dker"></i>
+            <span class="font-bold">日志平台</span>
+        </a>
+        <ul class="nav nav-sub dk">
+            <li class="nav-sub-header">
+                <a href>
+                    <span>日志平台</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.log.info')" ui-sref-active="active">
+                <a ui-sref="app.log.info">
+                    <span>日志查询</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.log.alertor')" ui-sref-active="active">
+                <a ui-sref="app.log.alertor">
+                    <span>告警联系</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.log.mail')" ui-sref-active="active">
+                <a ui-sref="app.log.mail">
+                    <span>邮件设置</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+
+</ul>
+
+<!-- / third -->

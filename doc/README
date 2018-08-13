@@ -1,0 +1,223 @@
+日志存储格式说明
+--------------
+为统一处理平台日志而制定此日志协议。
+
+目录
+--------------
+- 日志定义
+	- 类别定义
+	- 分类定义
+	- 日志对象
+- 文件存储协议
+- 打印显示协议
+	- 横向打印
+	- 纵向打印
+- 网络传输协议
+- 服务器交互
+	- 提交流程
+	- 提交方法
+	- 数据库表
+- 参考资料
+
+
+日志定义
+=========================================
+
+类别定义
+-----------------------------------------
+此类别参考了log4j、log4net, log4c
+debug
+	值 0
+	调试信息,相当于print输出。
+
+info
+	值 1
+	程序运行状态信息。如启动、停止、重连等信息，体现了程序环境的变更状态。
+
+warn 
+	值 2
+	程序异常信息。本类别不影响程序继续使用，但其结果可能会引出潜在的重大问题。
+	例如：请求的数据格式错误；网络连接错误(但重新连接后可自动修复), 连接超时等行为。
+	此类异常在一段时间如果出现过多，那么应该分析其中的原因，例如可能存在的问题：
+	被攻击、硬件老化、硬件达到了承载上限、对方服务出现异常等问题。
+	日志系统将发送一封邮件到相关人员。
+
+error
+	值 3
+	程序致命的错误信息， 提交服务器。此错误将影响到正常逻辑, 甚至平台因此而恐慌、停止服务的行为.
+	例如：数据库不可用、充值不可用、短信不可用、vos不可用等需要及时处理的行为都可定义为此类别。
+	日志系统将发送一封邮件、短信(或者其他实时联系方式)至相关人员
+
+fatal
+	值 4
+	检测到程序非正常结束。日志系统将调用所有实时联系方式联系相关人员处理。
+
+分类定义
+------------------------------------------
+暂无
+
+
+日志对象
+------------------------------------------
+日志对象为以下json格式所对应的json对象
+{
+	// 发生的时间以各平台时间为准
+	// 使用RFC3999Nano时间格式协议
+	"date":"2012-01-01T00:00:00.999+08:00",
+
+	// 日志级别
+	"level": 0,
+
+	// 日志生成器类别
+	"logger":"register",
+
+	// 存储时以序列化字符串形式存储
+	"msg": JsonObject
+}
+
+文件存储协议
+==============================================
+因本地涉及到文件存储的问题，本协议应用于统一本地存储格式，
+文件名:年-月-日.log
+文件内容:
+日志对象序列化为一行的字符串,例如：
+{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"}
+{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"}
+{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"}
+{"date":"2012-01-01T00:00:00.999+08:00","level":0,"logger":"register","msg":{"key":"not found sms driver","reason":" [[86 17363227806]]","where":"runtime/proc.c,line:234 sms/service.go,line:74"}}
+{"date":"2012-01-01T00:00:00.999+08:00","level":0,"logger":"register","msg":{"key":"not found sms driver","reason":" [[86 17363227806]]","where":"runtime/proc.c,line:234 sms/service.go,line:74"}}
+{"date":"2012-01-01T00:00:00.999+08:00","level":0,"logger":"register","msg":{"key":"not found sms driver","reason":" [[86 17363227806]]","where":"runtime/proc.c,line:234 sms/service.go,line:74"}}
+
+打印显示协议
+============================================
+为便于原始日志可直观显示而制定本协议。
+
+横向打印
+--------------------------------------------
+横向打印即文件协议所存储的格式，一个日志显示占用一行，例如：
+{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"}
+{"date":"2012-01-01T00:00:00.999+08:00","level":0,"logger":"register","msg":{"key":"not found sms driver","reason":" [[86 17363227806]]","where":"runtime/proc.c,line:234 sms/service.go,line:74"}}
+
+纵向打印
+--------------------------------------------
+为便于以多行显示，可采用json的序列为指定格式后打印，例如：
+{
+  "date": "2012-01-01T00:00:01.999+08:00",
+  "level": 0,
+  "logger": "pay",
+  "msg": "string test"
+}
+{
+  "date": "2012-01-01T00:00:00.999+08:00",
+  "level": 0,
+  "logger": "register",
+  "msg": {
+    "key": "not found sms driver",
+    "reason": " [[86 17363227806]]",
+    "where": "runtime/proc.c,line:234 sms/service.go,line:74"
+  }
+}
+
+网络传输协议
+===========================================
+本协议用于本地日志提交。
+传输协议分协议头与内容体两部分
+整体协议:
+{
+	"contex":{
+		// 日志所在平台
+		"platform":"t2mserver",
+
+		// 平台版本号
+		"version":"1.0.0",
+
+		// 日志产生地
+		"ip":"127.0.0.1"
+	},
+
+	// 内容体为一个数组，可存放一至多条日志数据。
+	// 此协议设计各平台不存放大量的日志数据，最多只存放无法提交的数据。
+	// 因此，如果本地日志文件内容过大时由各平台截断处理。
+	"data":[
+		{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"},
+		{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"},
+		{"date":"2012-01-01T00:00:01.999+08:00","level":0,"logger":"pay","msg":"string test"},
+		{"date":"2012-01-01T00:00:00.999+08:00","level":0,"logger":"register","msg":{"key":"not found sms driver","reason":" [[86 17363227806]]","where":"runtime/proc.c,line:234 sms/service.go,line:74"}},
+		{"date":"2012-01-01T00:00:00.999+08:00","level":0,"logger":"register","msg":{"key":"not found sms driver","reason":" [[86 17363227806]]","where":"runtime/proc.c,line:234 sms/service.go,line:74"}}
+	]
+}
+
+
+
+服务器交互
+============================================
+
+提交流程
+--------------------------------------------
+1，首先记录日志到内存队列(或者其他机制，由平台具体实现)；
+2，同步提交日志到服务器，提交成功，删除内存队列;
+3，如果出错，转存本地日志，并发出一条错误短信;
+4, 如果本地转存成功，删除内存队列;
+5, 如果本地转存失败，输入至控制台，记录控制台输出的信息，成功后删除内存队列数据。
+6, 如果仍出错，修复程序，重启程序。
+注：本地转存的日志不再自动提交日志服务器；如果需要，可手工提交相关数据。终端流程可http直接提交
+
+提交方法
+--------------------------------------------
+- 内网方面
+日志服务器使用beanstalkd做为日志缓冲接口，向指定主题发送队列数据。
+各平台使用对应的beanstalkd客户端发送，详见以下链接文档。
+.net
+https://github.com/search?q=beanstalkd&repo=&langOverride=&start_value=1&type=Everything&language=C%23
+go
+https://github.com/search?q=beanstalkd&repo=&langOverride=&start_value=1&type=Everything&language=Go
+注：发送时注意对客户端工具使用同步发送机制
+
+数据库表
+---------------------------------------------
+每月一张日志表
+CREATE TABLE IF NOT EXISTS 
+    tb_log_201208
+(
+    md5 TEXT PRIMARY KEY,
+
+    -- platform name
+    platform TEXT NOT NULL,
+    
+    -- platform version
+    version TEXT NOT NULL,
+    
+    -- platform server at
+    ip TEXT,
+    
+    -- log date time
+    date TEXT NOT NULL,
+    
+    -- log level
+    level int NOT NULL,
+    
+    -- logger name
+    logger TEXT NOT NULL, 
+    
+    -- log message
+    msg TEXT NOT NULL
+)
+
+注：索引创建请参考程序实现
+
+参考资料
+========================================
+关于时间格式的资料
+IETF http://www.ietf.org/rfc/rfc3339.txt
+http://godoc.golang.org/pkg/time/
+http://docs.oracle.com/javame/config/cldc/ref-impl/midp2.0/jsr118/index.html
+
+关于beanstalk的资料
+http://kr.github.com/beanstalkd/
+
+scribe分布式日志系统的资料
+http://blog.csdn.net/kohaku/article/details/6049183
+
+了解Java日志系统框架的设计
+http://webservices.ctocio.com.cn/java/57/9424057_2.shtml
+

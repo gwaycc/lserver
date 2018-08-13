@@ -1,0 +1,37 @@
+<div class="modal-body wrapper-lg">
+  <div class="form-horizontal">
+
+    <label class="text-center" style="width:100%">删除用户</label>
+
+    <div class="line line-dashed b-b"></div>
+    <div class="form-group" style="margin-bottom:0px">
+      <label class="col-md-3">昵称</label>
+      <div class="col-md-9">
+        <input class="form-control" type="text" ng-model="nickName" disabled=true />
+      </div>
+    </div>
+
+    <div class="line line-dashed b-b"></div>
+    <div class="form-group" style="margin-bottom:0px">
+      <label class="col-md-3">备注</label>
+      <div class="col-md-9">
+        <input class="form-control" type="text" ng-model="memo" validator="required" no-validation-message="true"
+          placeholder="请输入操作说明" />
+      </div>
+    </div>
+
+    <div class="line line-dashed b-b"></div>
+    <div class="form-group" style="margin-bottom:0px">
+      <label class="col-md-3">操作密码</label>
+      <div class="col-md-9">
+        <input class="form-control" type="password" ng-model="authPwd" validator="required"
+          no-validation-message="true" placeholder="请输入操作密码" />
+      </div>
+    </div>
+
+    <div class="line line-dashed b-b"></div>
+    <div class="ngdialog-buttons mt">
+      <button class="ngdialog-button btn btn-info" ng-click='commit();'>确定</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h3">权限管理</h1>
+</div>
+<div class="wrapper-md">
+    <div>
+        <form class="form-inline" role="form">
+            <div class="form-group m-r-md">
+                <label>登录帐号</label>
+                <input class="form-control" type="text" ng-model="vm.userName" placeholder="请输入登录帐号">
+            </div>
+            <div class="form-group m-r-md">
+                <label>菜单名称</label>
+                <input class="form-control" type="text" ng-model="vm.menuName" placeholder="请输入菜单名称">
+            </div>
+            <div class="form-group m-r-md">
+                <label>状态</label>
+                <select class="form-control" ng-model="vm.myStat" ng-options="v as v.Name for v in vm.myStats">
+                    <option>--</option>
+                </select>
+            </div>
+
+            <div class="form-group m-r-md">
+                <button class="btn btn-info" ng-click="vm.getInfo(1)">查询</button>
+                <button class="btn btn-info" ng-click="vm.privBind(vm.userName)">快速设定</button>
+            </div>
+        </form>
+
+        <div style="overflow-x:auto">
+            <table class='table table-bordered'>
+                <caption>
+                    <h3><!--仅作排版 --></h3>
+                </caption>
+                <thead>
+                    <tr ng-show="vm.tableData&&vm.tableData.length > 0">
+                        <th>用户帐号</th>
+                        <th ng-repeat='name in vm.tableName track by $index'>{{name}}</th>
+                        <th>操作管理</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat='data in vm.tableData track by $index'>
+                        <td>{{vm.tmpUserName}}</td>
+                        <td ng-repeat='column in data track by $index' title='{{column}}'> {{column.toString().length<20?column:column.substring(0,20)+'...'}}</td>
+                        <td>
+                            <button class="btn btn-info" ng-disabled="data[2]=='已开通'" ng-click="vm.privOn(data)">开通</button>
+                            <button class="btn btn-info" ng-disabled="data[2]=='未开通'" ng-click="vm.privOff(data)">关闭</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <tm-pagination conf="vm.paginationConf"></tm-pagination>
+        </div>
+    </div>
+</div>

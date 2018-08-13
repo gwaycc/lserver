@@ -1,0 +1,20 @@
+  <!-- navbar -->
+  <div data-ng-include=" 'tpl/main/header.html?v=' + app.version " class="app-header navbar">
+  </div>
+  <!-- / navbar -->
+
+  <!-- menu -->
+  <div data-ng-include=" 'tpl/main/aside.html?v=' + app.version " class="app-aside hidden-xs {{app.settings.asideColor}}" ng-class="{'hide': app.hideAside }">
+  </div>
+  <!-- / menu -->
+
+  <!-- view -->
+  <div class="app-content app-content-full" ng-class="{'m-n': app.hideAside }" ui-view>
+    
+  </div>
+  <!-- / view -->
+  <!-- navbar -->
+  <div class="app-footer navbar navbar-fixed-bottom bg-light lt b-t" ng-class="{'m-n': app.hideAside }" ui-view="footer">
+    
+  </div>
+  <!-- /navbar -->
