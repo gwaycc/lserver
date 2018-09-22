@@ -5,13 +5,6 @@
 // Demonstrate how to register services
 angular
   .module('app.services', ['ngDialog'])
-  .constant('qiniu', {
-    url: 'http://upload.qiniu.com/'
-  })
-  .constant('prefix', {
-    cover: 'n2d/cover_',
-    content: 'n2d/content_'
-  })
 
 .factory('UUIDService', [
 
@@ -33,11 +26,12 @@ angular
       };
     }
   ])
-  .factory('MsgService', ['ngDialog',
-    function(ngDialog) {
+  .factory('MsgService', ['ngDialog', '$sce',
+    function(ngDialog, $sce) {
       // 去除无响应时的重复弹框
       var isOpenDialog = false;
       var isOpenConfirm = false;
+      var isOpenMedia = false;
       return {
         openDialog: function(opts) {
           if (isOpenDialog) {
@@ -78,7 +72,32 @@ angular
             }
           });
           return
-        }
+        },
+
+        openMedia: function(kind, title, url, callback) {
+          if (isOpenMedia) {
+            return
+          }
+          isOpenMedia = true;
+
+          ngDialog.open({
+            template: '/tpl/app_media.html',
+            showClose: true,
+            closeByEscape: false,
+            closeByDocument: false,
+            data: {
+              kind: kind,
+              title: title,
+              url: $sce.trustAsResourceUrl(url)
+            },
+          }).closePromise.then(function(data) {
+            isOpenMedia = false;
+            if (callback != undefined) {
+              callback(data.value);
+            }
+          });
+          return
+        },
       }
     }
   ])
@@ -121,46 +140,7 @@ angular
       }
     }
   ])
-  .factory('FileService', ['$http', '$cookies', 'qiniu', 'prefix', 'UUIDService',
-    function($http, $cookies, qiniu, prefix, UUIDService) {
-      return {
-        getUploader: getUploader,
-        genCoverKey: genCoverKey,
-        genHtmlKey: genHtmlKey
-      };
-
-      function getUploader(callback) {
-        $http({
-          method: 'POST',
-          url: "/api/uploader"
-        }).success(function(data) {
-          callback(null, data);
-        }).error(function(err) {
-          callback(err, null)
-        });
-      }
-
-      function genCoverKey(file) {
-        return genKey(prefix.cover, file.name.split('.').pop());
-      }
-
-      function genHtmlKey() {
-        return genKey(prefix.content, 'html');
-      }
-
-      function genKey(prefix, postfix) {
-        var acc = $cookies.acc;
-        var uuid = UUIDService.create();
-
-        return [
-          [prefix, uuid].join(''), postfix
-        ].join('.');
-      }
-
-    }
-  ])
   .factory('PwdService', [
-
     function() {
       var rand = function(min, max) {
         return min + Math.round(Math.random() * (max - min));
@@ -290,11 +270,11 @@ angular
       }
     }
   ])
-  .factory('UploadService', ['FileService', '$upload', 'MsgService',
-    function(FileService, $upload, MsgService) {
+  .factory('UploadService', ['$http', '$upload', 'MsgService', 'UUIDService',
+    function($http, $upload, MsgService, UUIDService) {
       return {
         // 上传成功会回调地址
-        upload: function($files, callback) {
+        upload: function($files, group, callback) {
           if (!$files) {
             MsgService.openConfirm('控件错误');
             return
@@ -303,35 +283,44 @@ angular
             MsgService.openConfirm('仅能上传单个文件');
             return
           }
+          if ($files.length == 0) {
+            MsgService.openConfirm('未选择文件');
+            return;
+          }
 
           // 给用户提示文件大小
           if ($files.size > 100 * 1024) {
-            MsgService.openConfirm('文件大小超过了100KB, 建议优化后再提交');
+            MsgService.openConfirm('文件大小超过了100KB, 建议对图片进行优化');
           }
 
-          FileService.getUploader(function(err, data) {
-            if (err) {
+          // 获取上传的token
+          $http({
+            method: 'POST',
+            url: "/api/uploader"
+          }).error(function(err) {
+            MsgService.openConfirm(err);
+            return;
+          }).success(function(data) {
+            // 上传数据 
+            var key = [data.bucket, "/", group, "-", UUIDService.create()].join("");
+            $upload.upload({
+              url: 'https://up-z2.qiniup.com/',
+              data: {
+                key: key,
+                token: data.token
+              },
+              file: $files[0]
+            }).progress(function(evt) {
+              // 控制台显示进茺
+              console.log($files[0].name + ' upload: ' + parseInt(100.0 * evt.loaded / evt.total));
+            }).success(function() {
+              // 上传成功，回调下载地址给调用者
+              callback(data.domain + "/" + key);
+            }).error(function(err) {
               MsgService.openConfirm(err);
-              return
-            } else if ($files.length) {
-              var uploader = data;
-              var key = FileService.genCoverKey($files[0]);
-              $upload.upload({
-                url: 'http://upload.qiniu.com/',
-                data: {
-                  key: key,
-                  token: uploader.token
-                },
-                file: $files[0]
-              }).progress(function(evt) {
-                console.log($files[0].name + ' upload: ' + parseInt(100.0 * evt.loaded / evt.total));
-              }).success(function() {
-                callback(uploader.url_prefix + key);
-              }).error(function(err) {
-                MsgService.openConfirm(err);
-              });
-            }
-          })
+            });
+
+          });
         }
       };
     }

@@ -188,6 +188,13 @@ func CmsPwdApi(c echo.Context) error {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
+
+	// 若存在禁用的黑名单，执行清除操作
+	blList := AttackCtrl.RegexpBlackList(fmt.Sprintf("cms_attack_%v", userName))
+	for _, bl := range blList {
+		AttackCtrl.DelBlackList(bl)
+	}
+
 	// 生成日志
 	if err := cmsdb.PutLog(uc.UserName, "修改后台密码", userName, memo); err != nil {
 		log.Warn(errors.As(err))

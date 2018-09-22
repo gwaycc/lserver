@@ -2,8 +2,11 @@ package route
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"module/gouuid"
+	"module/httptry/ipctrl"
+	"module/redis"
 	"net/http"
 	"time"
 
@@ -39,7 +42,7 @@ func (uc *UserCache) ToJson() []byte {
 	return data
 }
 
-const cookieKey = "codein_cms_session"
+const cookieKey = "lserver_cms_session"
 
 func (uc *UserCache) SetToSession(c echo.Context) error {
 	sessionName := gouuid.New()
@@ -53,7 +56,7 @@ func (uc *UserCache) SetToSession(c echo.Context) error {
 	if err := redisClient.Set(sessionName, uc, 1*60*60); err != nil {
 		return errors.As(err)
 	}
-	if err := redisClient.Set("codeincms_"+uc.UserName, uc.OnlineKey, 1*60*60); err != nil {
+	if err := redisClient.Set("lservercms_"+uc.UserName, uc.OnlineKey, 1*60*60); err != nil {
 		return errors.As(err)
 	}
 	c.SetCookie(cookie)
@@ -61,7 +64,7 @@ func (uc *UserCache) SetToSession(c echo.Context) error {
 }
 
 func (uc *UserCache) CleanSession() error {
-	return errors.As(redisClient.Delete("codeincms_" + uc.UserName))
+	return errors.As(redisClient.Delete("lservercms_" + uc.UserName))
 }
 
 func (uc *UserCache) ReAuth(passwd string) bool {
@@ -92,8 +95,10 @@ func GetUserCache(c echo.Context) *UserCache {
 		return nil
 	}
 	onlineKey := 0
-	if err := redisClient.Scan("codeincms_"+uc.UserName, &onlineKey); err != nil {
-		log.Warn(errors.As(err))
+	if err := redisClient.Scan("lservercms_"+uc.UserName, &onlineKey); err != nil {
+		if !errors.Equal(redis.ErrNil, err) {
+			log.Warn(errors.As(err))
+		}
 		return nil
 	}
 
@@ -128,8 +133,16 @@ func AccSigninView(c echo.Context) error {
 	return Index(c)
 }
 
+var (
+	// 10分钟内连续输错5次
+	// TODO:存储到redis中，以便可以在集群中使用
+	AttackCtrl = ipctrl.NewAccessController(10*time.Minute, 10*time.Minute, 5)
+)
+
 // 登录操作
 func AccSigninApi(c echo.Context) error {
+	req := c.Request()
+	ips, _ := AttackCtrl.ReadIp(req)
 	username := FormValue(c, "acc")
 	passwd := FormValue(c, "pwd")
 
@@ -138,18 +151,37 @@ func AccSigninApi(c echo.Context) error {
 	if !captcha.VerifyString(vcodeId, vcodeData) {
 		return c.String(403, "验证码错误")
 	}
+	attackKey := []string{fmt.Sprintf("cms_attack_%v_%v", username, ips)}
+	if _, in := AttackCtrl.InBlackList(attackKey); in {
+		return c.String(403, "因多次错误已禁用该账号，请联系管理员")
+	}
 
 	cmsdb := cms.NewCmsDB()
 	u, err := cmsdb.GetUser(username, 1)
 	if err != nil {
 		if errors.ErrNoData.Equal(err) {
 			log.Debug(errors.As(err, username))
+			// 防暴力猜密码
+			if AttackCtrl.AttackCheck(attackKey) < 1 {
+				AttackCtrl.AddBlackList(attackKey[0])
+			}
+
 			return c.String(403, "账户或密码错误")
 		}
 		log.Warn(errors.As(err, username))
 		return c.String(500, "系统错误")
 	}
+
 	if !u.CheckSumPasswd(passwd) {
+		// 防暴力猜密码
+		if AttackCtrl.AttackCheck(attackKey) < 1 {
+			// 记录至数据库
+			if err := cms.PutLog(username, "账号攻击", attackKey[0], "受多次输入密码错误，请联系管理员重置密码，并设置高强度密码"); err != nil {
+				return c.String(500, "系统错误")
+			}
+			AttackCtrl.AddBlackList(attackKey[0])
+		}
+
 		return c.String(403, "账户或密码错误")
 	}
 
