@@ -8,7 +8,8 @@
 #
 # 工具安装
 # sudo npm install clean-css-cli -g
-# sudo npm install uglify-js -g
+# sudo npm install uglify-es -g # 或者 sudo npm install uglify-js -g
+
 
 #################################3
 # cleancss
