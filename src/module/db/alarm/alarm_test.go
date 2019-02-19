@@ -1,4 +1,4 @@
-package etc
+package alarm
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ func TestRemoveReceiver(t *testing.T) {
 		&Receiver{},
 		&Receiver{},
 	}
-	fmt.Println(Remove(arr, 0))
-	fmt.Println(Remove(arr, 1))
-	fmt.Println(Remove(arr, 2))
+	fmt.Println(RemoveReceiver(arr, 0))
+	fmt.Println(RemoveReceiver(arr, 1))
+	fmt.Println(RemoveReceiver(arr, 2))
 }

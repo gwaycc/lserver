@@ -105,6 +105,7 @@ func insertBehavior(l *behavior.Event) error {
 		gouuid.New(),
 	)
 	if err != nil {
+		behaviorTbTime = "" // 重新检查表数据是否创建了
 		return errors.As(err, l)
 	}
 	return nil

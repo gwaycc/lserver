@@ -1,14 +1,13 @@
-package etc
+package alarm
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"module/db"
 	"module/mail"
-	"os"
 	"sync"
 	"time"
 
-	"github.com/gwaylib/conf"
+	"github.com/gwaylib/database"
 	"github.com/gwaylib/errors"
 	"github.com/gwaylib/log"
 )
@@ -88,23 +87,19 @@ func (s *Alarm) Deamon() {
 	}
 }
 func (s *Alarm) LoadCfg() (*AlarmCfg, error) {
+	data := []byte{}
+	if err := database.QueryElem(db.GetCache("master"), &data, "SELECT cfgdata FROM lserver_cfg WHERE cfgname='alarm'"); err != nil {
+		if !errors.ErrNoData.Equal(err) {
+			return nil, errors.As(err)
+		}
+		// no data
+	}
 	cfg := &AlarmCfg{}
-	fileName := conf.RootDir() + "/etc/alarm.cfg"
-	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		return nil, errors.As(err)
-	}
-	defer file.Close()
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, errors.As(err)
-	}
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, cfg); err != nil {
 			return nil, errors.As(err)
 		}
 	}
-
 	s.cfg = cfg
 	return cfg, nil
 }
@@ -119,9 +114,20 @@ func (s *Alarm) SaveCfg() error {
 	if err != nil {
 		return errors.As(err)
 	}
-	file := conf.RootDir() + "/etc/alarm.cfg"
-	if err := ioutil.WriteFile(file, data, os.ModePerm); err != nil {
+
+	exist := false
+	mdb := db.GetCache("master")
+	if err := database.QueryElem(mdb, &exist, "SELECT COUNT(1) FROM lserver_cfg WHERE cfgname='alarm'"); err != nil {
 		return errors.As(err)
+	}
+	if !exist {
+		if _, err := mdb.Exec("INSERT INTO lserver_cfg(cfgname,cfgdata)VALUES(?,?)", "alarm", data); err != nil {
+			return errors.As(err)
+		}
+	} else {
+		if _, err := mdb.Exec("UPDATE lserver_cfg SET cfgdata=? WHERE cfgname=?", data, "alarm"); err != nil {
+			return errors.As(err)
+		}
 	}
 	return nil
 }

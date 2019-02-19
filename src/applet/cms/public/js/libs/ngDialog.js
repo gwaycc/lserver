@@ -456,7 +456,11 @@
 
                             if (options.data && angular.isString(options.data)) {
                                 var firstLetter = options.data.replace(/^\s*/, '')[0];
-                                scope.ngDialogData = (firstLetter === '{' || firstLetter === '[') ? angular.fromJson(options.data) : options.data;
+                                try{
+                                    scope.ngDialogData = angular.fromJson(options.data)
+                                }catch(e){
+                                    scope.ngDialogData = options.data;
+                                }
                             } else if (options.data && angular.isObject(options.data)) {
                                 scope.ngDialogData = options.data;
                             }

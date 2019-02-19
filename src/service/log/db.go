@@ -69,7 +69,7 @@ func getLogTbName(currentTime time.Time) (string, error) {
 		return logTbName + logTbTime, nil
 	}
 
-	tbName := logTbName + logTbTime
+	tbName := logTbName + timefmt
 	mdb := db.GetCache("master")
 	// 创表
 	if _, err := mdb.Exec(fmt.Sprintf(createLogTb, tbName)); err != nil {
@@ -99,6 +99,7 @@ func InsertLog(l *DbTable) error {
 		l.msg,
 	)
 	if err != nil {
+		logTbTime = "" // 重新检查表数据是否创建了
 		return errors.As(err, l)
 	}
 	return nil

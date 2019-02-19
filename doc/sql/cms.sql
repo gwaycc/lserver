@@ -106,3 +106,15 @@ CREATE TABLE cms_user_priv_tpl
     PRIMARY KEY(tplname, menu_id)
 ); 
 INSERT INTO cms_user_priv_tpl SELECT '管理员模板' AS tplname, id AS menu_id FROM cms_menu WHERE id <> '*.*.*.*.*';
+
+-- 内存配置文件，每5分钟读取一次
+CREATE TABLE lserver_cfg
+(
+    -- 配置文件名称
+    cfgname VARCHAR(32) NOT NULL,
+    -- 配置文件内容
+    cfgdata BLOB NOT NULL,
+    -- 主键
+    PRIMARY KEY(cfgname)
+); 
+

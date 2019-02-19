@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"module/etc"
+	"module/db/alarm"
 	"os"
 	"time"
 
@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	alertor = etc.NewAlarm()
+	alertor = alarm.NewAlarm()
 )
 
 func init() {

@@ -2,7 +2,7 @@ package route
 
 import (
 	"fmt"
-	"module/etc"
+	"module/db/alarm"
 	"strconv"
 
 	"github.com/gwaylib/database"
@@ -160,9 +160,9 @@ func LogAlertorView(c echo.Context) error {
 }
 
 func LogAlertorApi(c echo.Context) error {
-	alarm := etc.NewAlarm()
-	defer alarm.Close()
-	cfg, err := alarm.LoadCfg()
+	alarmCfg := alarm.NewAlarm()
+	defer alarmCfg.Close()
+	cfg, err := alarmCfg.LoadCfg()
 	if err != nil {
 		log.Info(errors.As(err))
 	}
@@ -191,22 +191,22 @@ func LogAlertorAddApi(c echo.Context) error {
 	if !uc.ReAuth(FormValue(c, "authPwd")) {
 		return c.String(403, "操作密码错误")
 	}
-	alarm := etc.NewAlarm()
-	defer alarm.Close()
-	cfg, err := alarm.LoadCfg()
+	alarmCfg := alarm.NewAlarm()
+	defer alarmCfg.Close()
+	cfg, err := alarmCfg.LoadCfg()
 	if err != nil {
 		log.Info(errors.As(err))
 	}
 
 	rs := cfg.Receivers
 
-	_, ok := etc.SearchReceiver(rs, nickName)
+	_, ok := alarm.SearchReceiver(rs, nickName)
 	if ok {
 		return c.String(403, "昵称已存在")
 	}
-	cfg.Receivers = append(rs, &etc.Receiver{NickName: nickName, Mobile: mobile, Email: email})
+	cfg.Receivers = append(rs, &alarm.Receiver{NickName: nickName, Mobile: mobile, Email: email})
 
-	if err := alarm.SaveCfg(); err != nil {
+	if err := alarmCfg.SaveCfg(); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -224,23 +224,23 @@ func LogAlertorSetApi(c echo.Context) error {
 	if !uc.ReAuth(FormValue(c, "authPwd")) {
 		return c.String(403, "操作密码错误")
 	}
-	alarm := etc.NewAlarm()
-	defer alarm.Close()
-	cfg, err := alarm.LoadCfg()
+	alarmCfg := alarm.NewAlarm()
+	defer alarmCfg.Close()
+	cfg, err := alarmCfg.LoadCfg()
 	if err != nil {
 		log.Info(errors.As(err))
 	}
 
 	rs := cfg.Receivers
 
-	i, ok := etc.SearchReceiver(rs, nickName)
+	i, ok := alarm.SearchReceiver(rs, nickName)
 	if !ok {
 		return c.String(403, "昵称不存在")
 	}
 	rs[i].Mobile = mobile
 	rs[i].Email = email
 
-	if err := alarm.SaveCfg(); err != nil {
+	if err := alarmCfg.SaveCfg(); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -256,21 +256,21 @@ func LogAlertorDelApi(c echo.Context) error {
 	if !uc.ReAuth(FormValue(c, "authPwd")) {
 		return c.String(403, "操作密码错误")
 	}
-	alarm := etc.NewAlarm()
-	defer alarm.Close()
-	cfg, err := alarm.LoadCfg()
+	alarmCfg := alarm.NewAlarm()
+	defer alarmCfg.Close()
+	cfg, err := alarmCfg.LoadCfg()
 	if err != nil {
 		log.Info(errors.As(err))
 	}
 	rs := cfg.Receivers
 
-	i, ok := etc.SearchReceiver(rs, nickName)
+	i, ok := alarm.SearchReceiver(rs, nickName)
 	if !ok {
 		return c.String(403, "昵称不存在")
 	}
-	cfg.Receivers = etc.RemoveReceiver(rs, i)
+	cfg.Receivers = alarm.RemoveReceiver(rs, i)
 
-	if err := alarm.SaveCfg(); err != nil {
+	if err := alarmCfg.SaveCfg(); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -282,9 +282,9 @@ func LogMailView(c echo.Context) error {
 }
 
 func LogMailApi(c echo.Context) error {
-	alarm := etc.NewAlarm()
-	defer alarm.Close()
-	cfg, err := alarm.LoadCfg()
+	alarmCfg := alarm.NewAlarm()
+	defer alarmCfg.Close()
+	cfg, err := alarmCfg.LoadCfg()
 	if err != nil {
 		log.Info(errors.As(err))
 	}
@@ -304,9 +304,9 @@ func LogMailApi(c echo.Context) error {
 }
 
 func LogMailSetApi(c echo.Context) error {
-	alarm := etc.NewAlarm()
-	defer alarm.Close()
-	cfg, err := alarm.LoadCfg()
+	alarmCfg := alarm.NewAlarm()
+	defer alarmCfg.Close()
+	cfg, err := alarmCfg.LoadCfg()
 	if err != nil {
 		log.Info(errors.As(err))
 	}
@@ -332,11 +332,11 @@ func LogMailSetApi(c echo.Context) error {
 	mailCfg.AuthPwd = mAuthPwd
 	cfg.MailServer = mailCfg
 
-	if err := alarm.Apply(cfg); err != nil {
+	if err := alarmCfg.Apply(cfg); err != nil {
 		return c.String(403, err.Error())
 	}
 
-	if err := alarm.SaveCfg(); err != nil {
+	if err := alarmCfg.SaveCfg(); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
