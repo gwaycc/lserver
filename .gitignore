@@ -10,7 +10,6 @@
 !/etc
 !/download
 !/doc
-!/src
 !/README.md
 !/Dockerfile
 !/*.sh
@@ -18,33 +17,25 @@
 !/.goget
 !/.gitignore
 
-# 关闭以下跟踪
-/src/*/*
-
-# 跟踪以下内容
-!/src/vendor/*.*
-!/src/module/*
-!/src/testing/*
-!/src/applet/*
-!/src/service/*
-
 # 跟踪以下所有文件
-/src/applet/*/*
-!/src/applet/*/*.go
-!/src/applet/*/*.bash
-!/src/applet/*/.gitignore
-!/src/applet/*/Dockerfile
-!/src/applet/*/public
-!/src/applet/*/route
-!/src/applet/*/model
-!/src/applet/*/testing
+!/applet
+/applet/*/*
+!/applet/*/*.go
+!/applet/*/*.bash
+!/applet/*/.gitignore
+!/applet/*/Dockerfile
+!/applet/*/public
+!/applet/*/route
+!/applet/*/model
+!/applet/*/testing
 
-/src/service/*/*
-!/src/service/*/*.go
-!/src/service/*/*.bash
-!/src/service/*/.gitignore
-!/src/service/*/Dockerfile
-!/src/service/*/public
-!/src/service/*/route
-!/src/service/*/model
-!/src/service/*/testing
+!/service
+/service/*/*
+!/service/*/*.go
+!/service/*/*.bash
+!/service/*/.gitignore
+!/service/*/Dockerfile
+!/service/*/public
+!/service/*/route
+!/service/*/model
+!/service/*/testing
