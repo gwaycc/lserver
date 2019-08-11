@@ -15,9 +15,14 @@
                     <span>系统管理</span>
                 </a>
             </li>
-            <li ng-show="Auth('app.cms.info')" ui-sref-active="active">
-                <a ui-sref="app.cms.info">
+            <li ng-show="Auth('app.cms.user')" ui-sref-active="active">
+                <a ui-sref="app.cms.user.info">
                     <span>用户管理</span>
+                </a>
+            </li>
+            <li ng-show="Auth('app.cms.group')" ui-sref-active="active">
+                <a ui-sref="app.cms.group.info">
+                    <span>分组管理</span>
                 </a>
             </li>
             <li ng-show="Auth('app.cms.priv')" ui-sref-active="active">

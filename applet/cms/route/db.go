@@ -5,6 +5,7 @@ import (
 
 	"github.com/gwaylib/database"
 	"github.com/gwaylib/errors"
+	"github.com/gwaylib/log"
 
 	"lserver/applet/cms/model/cms"
 	"lserver/module/db"
@@ -18,6 +19,7 @@ var (
 func QueryDB(db *database.DB, qsql *database.Template, offset, limit int, args ...interface{}) (int, []string, [][]interface{}, error) {
 	total := 0
 	if err := database.QueryElem(db, &total, qsql.CountSql, args...); err != nil {
+		log.Debug(errors.As(err))
 		// sqlite3 table not found
 		if strings.Index(err.Error(), "no such table") >= 0 {
 			return 0, []string{}, [][]interface{}{}, nil

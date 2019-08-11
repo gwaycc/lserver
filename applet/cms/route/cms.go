@@ -14,11 +14,18 @@ import (
 )
 
 const (
-	CmsInfoViewPath  = "/app/cms/info"
-	CmsInfoApiPath   = "/app/cms/info"
-	CmsCreateApiPath = "/app/cms/create"
-	CmsPwdApiPath    = "/app/cms/pwd"
-	CmsDeleteApiPath = "/app/cms/delete"
+	CmsUserInfoViewPath  = "/app/cms/user/info"
+	CmsUserInfoApiPath   = "/app/cms/user/info"
+	CmsUserCreateApiPath = "/app/cms/user/create"
+	CmsUserPwdApiPath    = "/app/cms/user/pwd"
+	CmsUserGroupApiPath  = "/app/cms/user/group"
+	CmsUserDeleteApiPath = "/app/cms/user/delete"
+
+	CmsGroupInfoViewPath  = "/app/cms/group/info"
+	CmsGroupInfoApiPath   = "/app/cms/group/info"
+	CmsGroupCreateApiPath = "/app/cms/group/create"
+	CmsGroupSetApiPath    = "/app/cms/group/set"
+	CmsGroupDeleteApiPath = "/app/cms/group/delete"
 
 	CmsLogViewPath = "/app/cms/log"
 	CmsLogApiPath  = "/app/cms/log"
@@ -40,11 +47,18 @@ const (
 
 func init() {
 	r := eweb.Default()
-	r.GET(CmsInfoViewPath, CmsInfoView)
-	r.POST(CmsInfoApiPath, CmsInfoApi)
-	r.POST(CmsCreateApiPath, CmsCreateApi)
-	r.POST(CmsPwdApiPath, CmsPwdApi)
-	r.POST(CmsDeleteApiPath, CmsDeleteApi)
+	r.GET(CmsUserInfoViewPath, CmsUserInfoView)
+	r.POST(CmsUserInfoApiPath, CmsUserInfoApi)
+	r.POST(CmsUserCreateApiPath, CmsUserCreateApi)
+	r.POST(CmsUserPwdApiPath, CmsUserPwdApi)
+	r.POST(CmsUserGroupApiPath, CmsUserGroupApi)
+	r.POST(CmsUserDeleteApiPath, CmsUserDeleteApi)
+
+	r.GET(CmsGroupInfoViewPath, CmsGroupInfoView)
+	r.POST(CmsGroupInfoApiPath, CmsGroupInfoApi)
+	r.POST(CmsGroupCreateApiPath, CmsGroupCreateApi)
+	r.POST(CmsGroupSetApiPath, CmsGroupSetApi)
+	r.POST(CmsGroupDeleteApiPath, CmsGroupDeleteApi)
 
 	r.GET(CmsLogViewPath, CmsLogView)
 	r.POST(CmsLogApiPath, CmsLogApi)
@@ -64,39 +78,43 @@ func init() {
 	r.POST(CmsPrivDeleteTplApiPath, CmsPrivDeleteTplApi)
 }
 
-func CmsInfoView(c echo.Context) error {
+func CmsUserInfoView(c echo.Context) error {
 	return Index(c)
 }
 
 var (
-	cmsInfoQsql = &database.Template{
+	cmsUserInfoQsql = &database.Template{
 		CountSql: `
 SELECT 
     count(1) 
 FROM
     cms_user
 WHERE
-    username like ?
+    status = 1
+    AND username like ?
     `,
 
 		DataSql: `
 SELECT 
-    username "帐号",
-    nickname "昵称",
-    CASE status WHEN 1 THEN '可用' WHEN 2 THEN '禁用' ELSE status END "状态",
-    created_at "创建时间" 
+    tb1.username "帐号",
+    tb1.nickname "昵称",
+    tb1.gid "组ID",
+    CASE WHEN tb2.name IS NULL THEN '<未知>' ELSE tb2.name END "组名称",
+    CASE tb1.status WHEN 1 THEN '可用' WHEN 2 THEN '禁用' ELSE tb1.status END "状态",
+    tb1.created_at "创建时间" 
 FROM
-    cms_user
+    cms_user tb1
+	LEFT JOIN cms_group tb2 ON tb1.gid=tb2.id
 WHERE
-    status = 1
-    AND username like ?
-ORDER BY username
+    tb1.status = 1
+    AND tb1.username like ?
+ORDER BY tb1.username
 LIMIT ?, ?
     `,
 	}
 )
 
-func CmsInfoApi(c echo.Context) error {
+func CmsUserInfoApi(c echo.Context) error {
 	currPageStr := FormValue(c, "pageId")
 	currPage, err := strconv.Atoi(currPageStr)
 	if err != nil {
@@ -107,7 +125,7 @@ func CmsInfoApi(c echo.Context) error {
 	userName := FormValue(c, "userName")
 	total, titles, result, err := QueryDB(
 		mdb,
-		cmsInfoQsql,
+		cmsUserInfoQsql,
 		currPage*10, 10,
 		"%"+userName+"%")
 	if err != nil {
@@ -124,7 +142,11 @@ func CmsInfoApi(c echo.Context) error {
 	})
 }
 
-func CmsCreateApi(c echo.Context) error {
+func CmsUserCreateApi(c echo.Context) error {
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID错误")
+	}
 	userName := FormValue(c, "userName")
 	userPwd := FormValue(c, "userPwd")
 	nickName := FormValue(c, "nickName")
@@ -154,7 +176,13 @@ func CmsCreateApi(c echo.Context) error {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
-	if err := cmsdb.CreateUser(userName, userPwd, nickName); err != nil {
+	pwd, _ := cms.CreatePwd(userPwd)
+	if err := cmsdb.CreateUser(&cms.CmsUser{
+		UserName: userName,
+		Passwd:   pwd,
+		NickName: nickName,
+		Gid:      gid,
+	}); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -166,7 +194,8 @@ func CmsCreateApi(c echo.Context) error {
 
 	return c.String(200, "操作成功")
 }
-func CmsPwdApi(c echo.Context) error {
+
+func CmsUserPwdApi(c echo.Context) error {
 	userName := FormValue(c, "userName")
 	userPwd := FormValue(c, "userPwd")
 	memo := FormValue(c, "memo")
@@ -195,7 +224,35 @@ func CmsPwdApi(c echo.Context) error {
 
 	return c.String(200, "操作成功")
 }
-func CmsDeleteApi(c echo.Context) error {
+func CmsUserGroupApi(c echo.Context) error {
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID不正确")
+	}
+	userName := FormValue(c, "userName")
+	memo := FormValue(c, "memo")
+	authPwd := FormValue(c, "authPwd")
+	if len(userName) == 0 {
+		log.Debug("no userName")
+		return c.String(403, "请输入用户帐号")
+	}
+	uc := GetUserCache(c)
+	if !uc.ReAuth(authPwd) {
+		log.Debug(authPwd)
+		return c.String(403, "操作密码错误")
+	}
+	if err := cmsdb.UpdateUserGroup(userName, gid); err != nil {
+		log.Warn(errors.As(err))
+		return c.String(500, "系统错误")
+	}
+	// 生成日志
+	if err := cmsdb.PutLog(uc.UserName, "修改用户组", fmt.Sprint(userName, gid), memo); err != nil {
+		log.Warn(errors.As(err))
+	}
+
+	return c.String(200, "操作成功")
+}
+func CmsUserDeleteApi(c echo.Context) error {
 	userName := FormValue(c, "userName")
 	memo := FormValue(c, "memo")
 	authPwd := FormValue(c, "authPwd")
@@ -218,6 +275,145 @@ func CmsDeleteApi(c echo.Context) error {
 	}
 	// 生成日志
 	if err := cmsdb.PutLog(uc.UserName, "删除后台用户", userName, memo); err != nil {
+		log.Warn(errors.As(err))
+	}
+
+	return c.String(200, "操作成功")
+}
+
+func CmsGroupInfoView(c echo.Context) error {
+	return Index(c)
+}
+
+var (
+	cmsGroupInfoQsql = &database.Template{
+		CountSql: `
+SELECT 
+    count(1) 
+FROM
+    cms_group
+WHERE
+    name like ?
+    `,
+
+		DataSql: `
+SELECT 
+    tb1.id "组ID",
+    tb1.name "组名称",
+    tb1.created_at "创建时间" 
+FROM
+    cms_group tb1
+WHERE
+    tb1.name like ?
+LIMIT ?, ?
+    `,
+	}
+)
+
+func CmsGroupInfoApi(c echo.Context) error {
+	currPageStr := FormValue(c, "pageId")
+	currPage, err := strconv.Atoi(currPageStr)
+	if err != nil {
+		log.Debug(errors.As(err, currPageStr))
+		return c.String(403, "页码有误")
+	}
+
+	name := FormValue(c, "name")
+	total, titles, result, err := QueryDB(
+		mdb,
+		cmsGroupInfoQsql,
+		currPage*10, 10,
+		"%"+name+"%")
+	if err != nil {
+		if !errors.ErrNoData.Equal(err) {
+			log.Debug(errors.As(err))
+			return c.String(500, "系统错误")
+		}
+		// 空数据
+	}
+	return c.JSON(200, eweb.H{
+		"total": fmt.Sprint(total),
+		"names": titles,
+		"data":  result,
+	})
+}
+
+func CmsGroupCreateApi(c echo.Context) error {
+	name := FormValue(c, "name")
+	memo := FormValue(c, "memo")
+	authPwd := FormValue(c, "authPwd")
+	if len(name) == 0 {
+		log.Debug("no name")
+		return c.String(403, "请输入组名称")
+	}
+	uc := GetUserCache(c)
+	if !uc.ReAuth(authPwd) {
+		log.Debug(authPwd)
+		return c.String(403, "操作密码错误")
+	}
+	cmsdb := cms.NewCmsDB()
+	if _, err := cmsdb.CreateGroup(name); err != nil {
+		log.Warn(errors.As(err))
+		return c.String(500, "系统错误")
+	}
+
+	// 生成日志
+	if err := cmsdb.PutLog(uc.UserName, "创建后台分组", name, memo); err != nil {
+		log.Warn(errors.As(err))
+	}
+	return c.String(200, "操作成功")
+}
+
+func CmsGroupSetApi(c echo.Context) error {
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID不正确")
+	}
+	name := FormValue(c, "name")
+	memo := FormValue(c, "memo")
+	authPwd := FormValue(c, "authPwd")
+	if len(name) == 0 {
+		log.Debug("no name")
+		return c.String(403, "请输入组名称")
+	}
+	uc := GetUserCache(c)
+	if !uc.ReAuth(authPwd) {
+		log.Debug(authPwd)
+		return c.String(403, "操作密码错误")
+	}
+	if err := cmsdb.SetGroup(gid, name); err != nil {
+		log.Warn(errors.As(err))
+		return c.String(500, "系统错误")
+	}
+	// 生成日志
+	if err := cmsdb.PutLog(uc.UserName, "修改用户组", fmt.Sprint(gid, name), memo); err != nil {
+		log.Warn(errors.As(err))
+	}
+
+	return c.String(200, "操作成功")
+}
+func CmsGroupDeleteApi(c echo.Context) error {
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID错误")
+	}
+	memo := FormValue(c, "memo")
+	authPwd := FormValue(c, "authPwd")
+	if gid == 0 {
+		return c.String(403, "内置分组不支持删除")
+	}
+	uc := GetUserCache(c)
+	if !uc.ReAuth(authPwd) {
+		log.Debug(authPwd)
+		return c.String(403, "操作密码错误")
+	}
+	cmsdb := cms.NewCmsDB()
+	if err := cmsdb.DeleteGroup(gid); err != nil {
+		log.Warn(errors.As(err))
+		return c.String(500, "系统错误")
+	}
+	// 生成日志
+	if err := cmsdb.PutLog(uc.UserName, "删除后台分组", fmt.Sprint(gid), memo); err != nil {
 		log.Warn(errors.As(err))
 	}
 
@@ -314,7 +510,7 @@ var (
 SELECT 
     count(1) 
 FROM cms_menu tb1
-LEFT JOIN cms_user_priv tb2 on tb1.id=tb2.menu_id and tb2.username=?
+LEFT JOIN cms_group_priv tb2 on tb1.id=tb2.menu_id and tb2.gid=?
 WHERE
     %s
 	AND tb1.name like ?
@@ -325,7 +521,7 @@ WHERE
 SELECT 
     tb1.id "功能ID", tb1.name "功能名称", CASE WHEN tb2.menu_id IS NOT NULL THEN '已开通' ELSE '未开通' END '是否开通'
 FROM cms_menu tb1
-LEFT JOIN cms_user_priv tb2 on tb1.id=tb2.menu_id and tb2.username=?
+LEFT JOIN cms_group_priv tb2 on tb1.id=tb2.menu_id and tb2.gid=?
 WHERE
     %s
 	AND tb1.name like ?
@@ -343,20 +539,19 @@ func CmsPrivApi(c echo.Context) error {
 		log.Debug(errors.As(err, currPageStr))
 		return c.String(403, "页码有误")
 	}
-
-	userName := FormValue(c, "userName")
-	if len(userName) == 0 {
-		return c.String(403, "请输入用户帐号")
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID不正确")
 	}
 	menuName := FormValue(c, "menuName")
 	// 校验帐号是否存在
 	cmsdb := cms.NewCmsDB()
-	if _, err := cmsdb.GetUser(userName, 1); err != nil {
+	if _, err := cmsdb.GetGroup(gid); err != nil {
 		if errors.ErrNoData.Equal(err) {
-			log.Debug(errors.As(err, userName))
-			return c.String(403, "用户名不存在")
+			log.Debug(errors.As(err, gid))
+			return c.String(403, "组ID不存在")
 		}
-		log.Warn(errors.As(err, userName))
+		log.Warn(errors.As(err, gid))
 		return c.String(500, "系统错误")
 	}
 
@@ -364,20 +559,18 @@ func CmsPrivApi(c echo.Context) error {
 	where := "1=1"
 	switch status {
 	case "1":
-		where = "tb2.username IS NOT NULL"
+		where = "tb2.gid IS NOT NULL"
 	case "2":
-		where = "tb2.username IS NULL"
+		where = "tb2.gid IS NULL"
 	}
 	total, titles, result, err := QueryDB(
 		mdb,
 		cmsPrivQsql.Sprintf(where),
 		currPage*10, 10,
-		userName, "%"+menuName+"%")
+		gid, "%"+menuName+"%")
 	if err != nil {
-		if !errors.ErrNoData.Equal(err) {
-			log.Debug(errors.As(err))
-			return c.String(500, "系统错误")
-		}
+		log.Debug(errors.As(err))
+		return c.String(500, "系统错误")
 		// 空数据
 	}
 	return c.JSON(200, eweb.H{
@@ -388,27 +581,27 @@ func CmsPrivApi(c echo.Context) error {
 }
 
 func CmsPrivBindApi(c echo.Context) error {
-	userName := FormValue(c, "userName")
-	if len(userName) == 0 {
-		return c.String(403, "请输入用户帐号")
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID不正确")
 	}
-	if userName == "admin" {
-		return c.String(403, "内置帐号不支持设定")
+	if gid == 0 {
+		return c.String(403, "内置组不支持设定")
 	}
 	tplName := FormValue(c, "tplName")
 	if len(tplName) == 0 {
 		return c.String(403, "请输入功能模板")
 	}
 	cmsdb := cms.NewCmsDB()
-	// 校验用户是否存在
-	if _, err := cmsdb.GetUser(userName, 1); err != nil {
+	// 校验是否存在
+	if _, err := cmsdb.GetGroup(gid); err != nil {
 		if errors.ErrNoData.Equal(err) {
-			return c.String(403, "帐号不存在")
+			return c.String(403, "组不存在")
 		}
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
-	if err := cmsdb.BindPriv(userName, tplName); err != nil {
+	if err := cmsdb.BindPriv(gid, tplName); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -416,16 +609,28 @@ func CmsPrivBindApi(c echo.Context) error {
 }
 
 func CmsPrivOnApi(c echo.Context) error {
-	userName := FormValue(c, "userName")
-	if len(userName) == 0 {
-		return c.String(403, "请输入用户帐号")
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID不正确")
+	}
+	if gid == 0 {
+		return c.String(403, "内置组不支持设定")
 	}
 	menuId := FormValue(c, "menuId")
 	if len(menuId) == 0 {
 		return c.String(403, "请输入菜单编号")
 	}
 	cmsdb := cms.NewCmsDB()
-	if err := cmsdb.AddPriv(userName, menuId); err != nil {
+	// 校验是否存在
+	if _, err := cmsdb.GetGroup(gid); err != nil {
+		if errors.ErrNoData.Equal(err) {
+			return c.String(403, "组不存在")
+		}
+		log.Warn(errors.As(err))
+		return c.String(500, "系统错误")
+	}
+
+	if err := cmsdb.AddPriv(gid, menuId); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -433,16 +638,19 @@ func CmsPrivOnApi(c echo.Context) error {
 }
 
 func CmsPrivOffApi(c echo.Context) error {
-	userName := FormValue(c, "userName")
-	if len(userName) == 0 {
-		return c.String(403, "请输入用户帐号")
+	gid, err := strconv.Atoi(FormValue(c, "gid"))
+	if err != nil {
+		return c.String(403, "组ID不正确")
+	}
+	if gid == 0 {
+		return c.String(403, "内置组不支持设定")
 	}
 	menuId := FormValue(c, "menuId")
 	if len(menuId) == 0 {
 		return c.String(403, "请输入菜单编号")
 	}
 	cmsdb := cms.NewCmsDB()
-	if err := cmsdb.DeletePriv(userName, menuId); err != nil {
+	if err := cmsdb.DeletePriv(gid, menuId); err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")
 	}
@@ -459,7 +667,7 @@ var (
 SELECT 
     count(1) 
 FROM cms_menu tb1
-LEFT JOIN cms_user_priv_tpl tb2 on tb1.id=tb2.menu_id and tplname=?
+LEFT JOIN cms_priv_tpl tb2 on tb1.id=tb2.menu_id and tplname=?
 WHERE
     %s
 	AND tb1.name like ?
@@ -471,7 +679,7 @@ SELECT
     tb1.id "功能ID", tb1.name "功能名称", CASE WHEN tb2.menu_id IS NOT NULL THEN '已开通' ELSE '未开通' END '是否开通'
 FROM 
     cms_menu tb1
-    LEFT JOIN cms_user_priv_tpl tb2 on tb1.id=tb2.menu_id and tb2.tplname=?
+    LEFT JOIN cms_priv_tpl tb2 on tb1.id=tb2.menu_id and tb2.tplname=?
 WHERE
     %s
 	AND tb1.name like ?
@@ -529,7 +737,7 @@ var (
 SELECT 
     count(1)
 FROM
-    cms_user_priv_tpl
+    cms_priv_tpl
 GROUP BY tplname
 ORDER BY tplname
 		`,
@@ -537,7 +745,7 @@ ORDER BY tplname
 SELECT 
     tplname
 FROM
-    cms_user_priv_tpl
+    cms_priv_tpl
 GROUP BY tplname
 ORDER BY tplname
 LIMIT ?, ?

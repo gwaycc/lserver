@@ -13,7 +13,7 @@ type CmsUser struct {
 	UserName string
 	Passwd   string // 加密的数据
 	NickName string // 昵称
-	GroupId  int
+	Gid      int
 	Status   int // 状态
 }
 

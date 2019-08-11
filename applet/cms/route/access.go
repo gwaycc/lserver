@@ -39,7 +39,7 @@ func (uc *UserCache) ToJson() []byte {
 	return data
 }
 
-const cookieKey = "codein_cms_session"
+const cookieKey = "lserver_cms_session"
 
 func (uc *UserCache) SetToSession(c echo.Context) error {
 	sessionName := gouuid.New()
@@ -53,7 +53,7 @@ func (uc *UserCache) SetToSession(c echo.Context) error {
 	if err := redisClient.Set(sessionName, uc, 1*60*60); err != nil {
 		return errors.As(err)
 	}
-	if err := redisClient.Set("codeincms_"+uc.UserName, uc.OnlineKey, 1*60*60); err != nil {
+	if err := redisClient.Set("lservercms_"+uc.UserName, uc.OnlineKey, 1*60*60); err != nil {
 		return errors.As(err)
 	}
 	c.SetCookie(cookie)
@@ -61,7 +61,7 @@ func (uc *UserCache) SetToSession(c echo.Context) error {
 }
 
 func (uc *UserCache) CleanSession() error {
-	return errors.As(redisClient.Delete("codeincms_" + uc.UserName))
+	return errors.As(redisClient.Delete("lservercms_" + uc.UserName))
 }
 
 func (uc *UserCache) ReAuth(passwd string) bool {
@@ -92,7 +92,7 @@ func GetUserCache(c echo.Context) *UserCache {
 		return nil
 	}
 	onlineKey := 0
-	if err := redisClient.Scan("codeincms_"+uc.UserName, &onlineKey); err != nil {
+	if err := redisClient.Scan("lservercms_"+uc.UserName, &onlineKey); err != nil {
 		log.Warn(errors.As(err))
 		return nil
 	}
@@ -153,7 +153,7 @@ func AccSigninApi(c echo.Context) error {
 		return c.String(403, "账户或密码错误")
 	}
 
-	priv, err := cmsdb.GetPriv(username)
+	priv, err := cmsdb.GetPriv(u.Gid)
 	if err != nil {
 		log.Warn(errors.As(err))
 		return c.String(500, "系统错误")

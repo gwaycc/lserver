@@ -23,7 +23,7 @@ CREATE TABLE cms_user
     PRIMARY KEY(username)
 );
 -- 默认密码LogAdmin123
-INSERT INTO cms_user(username,`passwd`, nickname, gid)VALUES('admin','$2a$10$4B9dd5YdxEHoN/I9LKGJhuheh7pqM2smhO0vXUEWpVeJWNCI0TL0O','管理员',0);
+INSERT INTO cms_user(username,`passwd`, nickname, gid)VALUES('admin','$2a$10$4B9dd5YdxEHoN/I9LKGJhuheh7pqM2smhO0vXUEWpVeJWNCI0TL0O','系统管理员',0);
 
 -- 组管理
 CREATE TABLE cms_group
@@ -39,7 +39,7 @@ CREATE TABLE cms_group
 -- 生成固定编号
 SET @tmp_sql_mode=@@sql_mode;
 SET sql_mode='NO_AUTO_VALUE_ON_ZERO';
-INSERT INTO cms_group(id,name)VALUES(0,"管理员");
+INSERT INTO cms_group(id,name)VALUES(0,"系统管理");
 SET sql_mode=@tmp_sql_mode;
 
 -- 后台操作记录
@@ -73,10 +73,15 @@ CREATE TABLE cms_menu
     PRIMARY KEY(id)
 );
 INSERT INTO cms_menu(id,name)VALUES('*.*.*.*.*','所有权限');
-INSERT INTO cms_menu(id,name)VALUES('app.cms.info','后台.用户查询');
-INSERT INTO cms_menu(id,name)VALUES('app.cms.create','后台.用户创建');
-INSERT INTO cms_menu(id,name)VALUES('app.cms.pwd','后台.重置密码');
-INSERT INTO cms_menu(id,name)VALUES('app.cms.delete','后台.用户删除');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.user.info','后台.用户.查询');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.user.create','后台.用户.创建');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.user.pwd','后台.用户.重置密码');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.user.group','后台.用户.分组');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.user.delete','后台.用户.删除');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.group.info','后台.分组.查询');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.group.create','后台.分组.创建');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.group.pwd','后台.用户.分组.修改');
+INSERT INTO cms_menu(id,name)VALUES('app.cms.group.delete','后台.用户.删除');
 INSERT INTO cms_menu(id,name)VALUES('app.cms.log','后台.操作日志');
 INSERT INTO cms_menu(id,name)VALUES('app.cms.priv','后台.权限.查询');
 INSERT INTO cms_menu(id,name)VALUES('app.cms.priv.bind','后台.权限.快速设定');

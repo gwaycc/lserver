@@ -15,10 +15,12 @@ type CmsDB interface {
 	Close() error
 
 	// 创建用户
-	CreateUser(username, pwd, nickName string) error
+	CreateUser(info *CmsUser) error
 	DeleteUser(username string) error
 	// 更新用户状态
 	UpdateUserStatus(username string, status int) error
+	// 更新用户组
+	UpdateUserGroup(username string, gid int) error
 	// 重置密码,输入原始密码
 	ResetPwd(username string, pwd string) error
 	// 读取用户信息
@@ -26,6 +28,7 @@ type CmsDB interface {
 
 	// 创建组用户
 	CreateGroup(name string) (int, error)
+	GetGroup(gid int) (string, error)
 	SetGroup(gid int, name string) error
 	DeleteGroup(gid int) error
 
@@ -76,22 +79,27 @@ func (db *cmsDB) Close() error {
 
 const (
 	createCmsUserSql = `
-    INSERT INTO
-        cms_user
-    (
-        username, passwd, nickname
-    )VALUES(
-        ?, ?, ?
-    )
-    `
+INSERT INTO
+    cms_user
+(
+    username, passwd, nickname, gid
+)VALUES(
+    ?, ?, ?, ?
+)
+`
 )
 
 // 创建用户
-func (db *cmsDB) CreateUser(username, pwdIn, nickName string) error {
-	passwd, _ := CreatePwd(pwdIn)
-	_, err := db.mdb.Exec(createCmsUserSql, username, passwd, nickName)
+func (db *cmsDB) CreateUser(info *CmsUser) error {
+	_, err := db.mdb.Exec(
+		createCmsUserSql,
+		info.UserName,
+		info.Passwd,
+		info.NickName,
+		info.Gid,
+	)
 	if err != nil {
-		return errors.As(err, username, pwdIn, nickName)
+		return errors.As(err, *info)
 	}
 	return nil
 }
@@ -130,6 +138,26 @@ func (db *cmsDB) UpdateUserStatus(username string, status int) error {
 	_, err := db.mdb.Exec(updateCmsUserStatusSql, status, username)
 	if err != nil {
 		return errors.As(err, username, status)
+	}
+	return nil
+}
+
+const (
+	updateCmsUserGroupSql = `
+    UPDATE
+        cms_user
+    SET
+        gid = ?
+    WHERE
+        username = ?
+    `
+)
+
+// 更新用户状态
+func (db *cmsDB) UpdateUserGroup(username string, gid int) error {
+	_, err := db.mdb.Exec(updateCmsUserGroupSql, gid, username)
+	if err != nil {
+		return errors.As(err, username, gid)
 	}
 	return nil
 }
@@ -174,7 +202,7 @@ func (db *cmsDB) GetUser(username string, status int) (*CmsUser, error) {
 	if err := db.mdb.QueryRow(getCmsUserSql, username, status).Scan(
 		&cmsUser.Passwd,
 		&cmsUser.NickName,
-		&cmsUser.GroupId,
+		&cmsUser.Gid,
 		&cmsUser.Status,
 	); err != nil {
 		if sql.ErrNoRows == err {
@@ -185,14 +213,63 @@ func (db *cmsDB) GetUser(username string, status int) (*CmsUser, error) {
 	return cmsUser, nil
 }
 
+const (
+	createGroupSql = `
+INSERT INTO cms_group(
+	name	
+)VALUES(
+	?
+)
+	`
+)
+
 func (db *cmsDB) CreateGroup(name string) (int, error) {
-	return 0, errors.New("TODO")
+	result, err := db.mdb.Exec(createGroupSql, name)
+	if err != nil {
+		return 0, errors.As(err, name)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, errors.As(err, name)
+	}
+	return int(id), nil
 }
+
+const (
+	getGroupSql = `SELECT name FROM cms_group WHERE id=?`
+)
+
+func (db *cmsDB) GetGroup(gid int) (string, error) {
+	name := ""
+	if err := database.QueryElem(db.mdb, &name, getGroupSql, gid); err != nil {
+		return "", errors.As(err, gid)
+	}
+	return name, nil
+}
+
+const (
+	setGroupSql = `UPDATE cms_group SET name=? WHERE id=?`
+)
+
 func (db *cmsDB) SetGroup(gid int, name string) error {
-	return errors.New("TODO")
+	if _, err := db.mdb.Exec(setGroupSql, name, gid); err != nil {
+		return errors.As(err, gid, name)
+	}
+	return nil
 }
+
+const (
+	delGroupSql = `DELETE FROM cms_group WHERE id=?`
+)
+
 func (db *cmsDB) DeleteGroup(gid int) error {
-	return errors.New("TODO")
+	if gid == 0 {
+		return errors.New("Can Not Delete 0 Group").As(gid)
+	}
+	if _, err := db.mdb.Exec(delGroupSql, gid); err != nil {
+		return errors.As(err, gid)
+	}
+	return nil
 }
 
 const (
