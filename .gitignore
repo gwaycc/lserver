@@ -14,7 +14,8 @@
 !/Dockerfile
 !/*.sh
 !/*.bash
-!/.goget
+!/go.mod
+!/go.sum
 !/.gitignore
 
 # 跟踪以下所有文件
