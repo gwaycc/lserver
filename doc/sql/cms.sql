@@ -1,6 +1,6 @@
 
 -- 创建数据库
-CREATE SCHEMA `lserver` DEFAULT CHARACTER SET utf8mb4 ;
+-- CREATE SCHEMA `lserver` DEFAULT CHARACTER SET utf8mb4 ;
 USE lserver;
 
 -- 后台管理用户表
@@ -15,16 +15,32 @@ CREATE TABLE cms_user
     `passwd` VARCHAR(128) NOT NULL,
     -- 用户昵称
     nickname VARCHAR(128) NOT NULL DEFAULT '',
-    -- 用户组，０为管理员，１为非管理员
-    -- 根据使用情况，暂不实现组权限功能
-    group_id INT NOT NULL DEFAULT 1,
+    -- 用户组，０为管理员
+    gid INT NOT NULL DEFAULT 0,
     -- 1，可用，2, 禁用。
     status INT NOT NULL DEFAULT 1,
     -- 主键
     PRIMARY KEY(username)
 );
 -- 默认密码LogAdmin123
-INSERT INTO cms_user(username,`passwd`, nickname, group_id)VALUES('admin','$2a$10$4B9dd5YdxEHoN/I9LKGJhuheh7pqM2smhO0vXUEWpVeJWNCI0TL0O','管理员',0);
+INSERT INTO cms_user(username,`passwd`, nickname, gid)VALUES('admin','$2a$10$4B9dd5YdxEHoN/I9LKGJhuheh7pqM2smhO0vXUEWpVeJWNCI0TL0O','管理员',0);
+
+-- 组管理
+CREATE TABLE cms_group
+(
+    id INT NOT NULL AUTO_INCREMENT,
+    -- 创建时间
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    name VARCHAR(128) NOT NULL, -- 组名称
+    -- 主键
+    PRIMARY KEY(id)
+);
+-- 生成固定编号
+SET @tmp_sql_mode=@@sql_mode;
+SET sql_mode='NO_AUTO_VALUE_ON_ZERO';
+INSERT INTO cms_group(id,name)VALUES(0,"管理员");
+SET sql_mode=@tmp_sql_mode;
 
 -- 后台操作记录
 CREATE TABLE cms_log
@@ -81,22 +97,22 @@ INSERT INTO cms_menu(id,name)VALUES('app.log.alertor.del','平台日志.告警�
 INSERT INTO cms_menu(id,name)VALUES('app.log.mail','平台日志.邮件设置');
 INSERT INTO cms_menu(id,name)VALUES('app.log.mail.set','平台日志.邮件设置.修改');
 
--- 后台权限表,　直接更改数据库无效，需用户重登录才生效
+-- 后台权限表,　更改数据库需用户重登录才生效
 -- 权限存在即可访问
-CREATE TABLE cms_user_priv
+CREATE TABLE cms_group_priv
 (
-    -- 用户名
-    username VARCHAR(32) NOT NULL,
+    -- 组ID
+    gid INT NOT NULL,
     -- 菜单名
     menu_id VARCHAR(32) NOT NULL,
     -- 主键
-    PRIMARY KEY(username, menu_id)
+    PRIMARY KEY(gid, menu_id)
 );
-INSERT INTO cms_user_priv(username,menu_id)VALUES("admin", "*.*.*.*.*");
+INSERT INTO cms_group_priv(gid,menu_id)VALUES(0, "*.*.*.*.*");
 
 -- 后台权限模板表,　直接更改数据库无效，需用户重登录才生效
 -- 权限存在即可访问
-CREATE TABLE cms_user_priv_tpl
+CREATE TABLE cms_priv_tpl
 (
     -- 模板名称
     tplname VARCHAR(32) NOT NULL,
@@ -105,7 +121,7 @@ CREATE TABLE cms_user_priv_tpl
     -- 主键
     PRIMARY KEY(tplname, menu_id)
 ); 
-INSERT INTO cms_user_priv_tpl SELECT '管理员模板' AS tplname, id AS menu_id FROM cms_menu WHERE id <> '*.*.*.*.*';
+INSERT INTO cms_priv_tpl SELECT '管理员模板' AS tplname, id AS menu_id FROM cms_menu WHERE id <> '*.*.*.*.*';
 
 -- 内存配置文件，每5分钟读取一次
 CREATE TABLE lserver_cfg
