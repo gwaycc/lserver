@@ -24,6 +24,11 @@ type CmsDB interface {
 	// 读取用户信息
 	GetUser(username string, status int) (*CmsUser, error)
 
+	// 创建组用户
+	CreateGroup(name string) (int, error)
+	SetGroup(gid int, name string) error
+	DeleteGroup(gid int) error
+
 	// 菜单管理, 菜单管理用于辅助权限管理
 	// 在这里仅做简单的权限设计，即只做一级uri与二级uri的菜单做权限管理
 	// 例如：
@@ -32,13 +37,13 @@ type CmsDB interface {
 	// key值格式为user, user.get
 	CreateMenu(key, name string) error
 	// 获取权限
-	GetPriv(username string) (CmsPriv, error)
+	GetPriv(gid int) (CmsPriv, error)
 	// 开通权限
-	AddPriv(username string, priv string) error
+	AddPriv(gid int, priv string) error
 	// 关闭权限
-	DeletePriv(username string, priv string) error
+	DeletePriv(gid int, priv string) error
 	// 绑定模板
-	BindPriv(username, tplname string) error
+	BindPriv(gid int, tplname string) error
 	// 开通模板权限
 	AddPrivTpl(tplname string, priv string) error
 	// 关闭模板权限
@@ -153,7 +158,7 @@ func (db *cmsDB) ResetPwd(username string, pwdIn string) error {
 const (
 	getCmsUserSql = `
     SELECT
-        passwd, nickname, group_id,
+        passwd, nickname, gid,
         status
     FROM
         cms_user
@@ -178,6 +183,16 @@ func (db *cmsDB) GetUser(username string, status int) (*CmsUser, error) {
 		return nil, errors.As(err, username)
 	}
 	return cmsUser, nil
+}
+
+func (db *cmsDB) CreateGroup(name string) (int, error) {
+	return 0, errors.New("TODO")
+}
+func (db *cmsDB) SetGroup(gid int, name string) error {
+	return errors.New("TODO")
+}
+func (db *cmsDB) DeleteGroup(gid int) error {
+	return errors.New("TODO")
 }
 
 const (
@@ -237,25 +252,25 @@ const (
     SELECT
         menu_id
     FROM
-        cms_user_priv
+        cms_group_priv
     WHERE
-        username = ?
+        gid = ?
     ORDER BY menu_id
     `
 )
 
 // 获取权限
-func (db *cmsDB) GetPriv(username string) (CmsPriv, error) {
-	rows, err := db.mdb.Query(getCmsPrivSql, username)
+func (db *cmsDB) GetPriv(gid int) (CmsPriv, error) {
+	rows, err := db.mdb.Query(getCmsPrivSql, gid)
 	if err != nil {
-		return nil, errors.As(err, username)
+		return nil, errors.As(err, gid)
 	}
 	defer rows.Close()
 	priv := CmsPriv{}
 	for rows.Next() {
 		var menu_id string
 		if err := rows.Scan(&menu_id); err != nil {
-			return nil, errors.As(err, username)
+			return nil, errors.As(err, gid)
 		}
 		data := strings.Split(menu_id, ".")
 		priv.Append(data)
@@ -266,68 +281,68 @@ func (db *cmsDB) GetPriv(username string) (CmsPriv, error) {
 const (
 	delCmsPrivSql = `
     DELETE FROM 
-        cms_user_priv
+        cms_group_priv
     WHERE
-        username = ?
+        gid = ?
         AND menu_id = ?
     `
 	addCmsPrivSql = `
     INSERT INTO
-        cms_user_priv
+        cms_group_priv
     (
-        username, menu_id
+        gid, menu_id
     )VALUE(
         ?, ?
     )
     `
 	delAllCmsPrivSql = `
     DELETE FROM 
-        cms_user_priv
+        cms_group_priv
     WHERE
-        username = ?
+        gid = ?
     `
 	bindCmsPrivSql = `
-    INSERT INTO cms_user_priv(
+    INSERT INTO cms_group_priv(
         SELECT ?,menu_id
-        FROM cms_user_priv_tpl
+        FROM cms_priv_tpl
         WHERE tplname=?
     )
     `
 )
 
 // 添加权限
-func (db *cmsDB) AddPriv(username string, priv string) error {
-	if _, err := db.mdb.Exec(addCmsPrivSql, username, priv); err != nil {
-		return errors.As(err, username, priv)
+func (db *cmsDB) AddPriv(gid int, priv string) error {
+	if _, err := db.mdb.Exec(addCmsPrivSql, gid, priv); err != nil {
+		return errors.As(err, gid, priv)
 	}
 	return nil
 }
 
 // 关闭权限
-func (db *cmsDB) DeletePriv(username string, priv string) error {
-	if _, err := db.mdb.Exec(delCmsPrivSql, username, priv); err != nil {
-		return errors.As(err, username, priv)
+func (db *cmsDB) DeletePriv(gid int, priv string) error {
+	if _, err := db.mdb.Exec(delCmsPrivSql, gid, priv); err != nil {
+		return errors.As(err, gid, priv)
 	}
 	return nil
 }
 
 // 绑定模板
-func (db *cmsDB) BindPriv(username, tplname string) error {
+func (db *cmsDB) BindPriv(gid int, tplname string) error {
 	tx, err := db.mdb.Begin()
 	if err != nil {
-		return errors.As(err, username, tplname)
+		return errors.As(err, gid, tplname)
 	}
-	if _, err := tx.Exec(delAllCmsPrivSql, username); err != nil {
+	if _, err := tx.Exec(delAllCmsPrivSql, gid); err != nil {
 		database.Rollback(tx)
-		return errors.As(err, username, tplname)
+		return errors.As(err, gid, tplname)
 	}
-	if _, err := tx.Exec(bindCmsPrivSql, username, tplname); err != nil {
+	if _, err := tx.Exec(bindCmsPrivSql, gid, tplname); err != nil {
 		database.Rollback(tx)
-		return errors.As(err, username, tplname)
+		return errors.As(err, gid, tplname)
 	}
 	if err := tx.Commit(); err != nil {
 		database.Rollback(tx)
-		return errors.As(err, username, tplname)
+		return errors.As(err, gid, tplname)
 	}
 	return nil
 }
@@ -335,14 +350,14 @@ func (db *cmsDB) BindPriv(username, tplname string) error {
 const (
 	delCmsPrivTplSql = `
     DELETE FROM 
-        cms_user_priv_tpl
+        cms_priv_tpl
     WHERE
         tplname = ?
         AND menu_id = ?
     `
 	addCmsPrivTplSql = `
     INSERT INTO
-        cms_user_priv_tpl
+        cms_priv_tpl
     (
         tplname, menu_id
     )VALUE(
@@ -351,14 +366,14 @@ const (
     `
 	delAllCmsPrivTplSql = `
     DELETE FROM 
-        cms_user_priv_tpl
+        cms_priv_tpl
     WHERE
         tplname = ?
     `
 	bindCmsPrivTplSql = `
-    INSERT INTO cms_user_priv_tpl(
+    INSERT INTO cms_priv_tpl(
         SELECT ?,menu_id
-        FROM cms_user_priv_tpl
+        FROM cms_priv_tpl
         WHERE tplname=?
     )
     `

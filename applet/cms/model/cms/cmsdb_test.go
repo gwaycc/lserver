@@ -8,7 +8,6 @@ import (
 
 func TestCmsUser(t *testing.T) {
 	db := NewCmsDB()
-	defer db.Close()
 
 	now := time.Now()
 	username := fmt.Sprint(now.UnixNano())
@@ -36,21 +35,18 @@ func TestCmsUser(t *testing.T) {
 	}
 }
 
-func TestUserPriv(t *testing.T) {
+func TestGroupPriv(t *testing.T) {
 	db := NewCmsDB()
-	defer db.Close()
 
 	now := time.Now()
-	username := fmt.Sprint(now.UnixNano())
-	if len(username) > 32 {
-		username = username[len(username)-32:]
-	}
+	gid := int(now.Unix())
+	gidStr := fmt.Sprint(gid)
 
-	path := "/test/" + username
-	if err := db.CreateMenu("test."+username, "testing"); err != nil {
+	path := "/test/" + gidStr
+	if err := db.CreateMenu("test."+gidStr, "testing"); err != nil {
 		t.Fatal(err)
 	}
-	priv, err := db.GetPriv(username)
+	priv, err := db.GetPriv(gid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,10 +54,10 @@ func TestUserPriv(t *testing.T) {
 		t.Fatal(path)
 	}
 
-	if err := db.AddPriv(username, "test"); err != nil {
+	if err := db.AddPriv(gid, "test."+gidStr); err != nil {
 		t.Fatal(err)
 	}
-	priv, err = db.GetPriv(username)
+	priv, err = db.GetPriv(gid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,24 +65,19 @@ func TestUserPriv(t *testing.T) {
 		t.Fatal(priv, path)
 	}
 }
-func TestBindUserPriv(t *testing.T) {
+func TestBindGroupPriv(t *testing.T) {
 	db := NewCmsDB()
-	defer db.Close()
 	now := time.Now()
-	username := fmt.Sprint(now.UnixNano())
-	if len(username) > 32 {
-		username = username[len(username)-32:]
-	}
-	if err := db.BindPriv(username, "管理员"); err != nil {
+	gid := int(now.Unix())
+	if err := db.BindPriv(gid, "管理员"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestAdminPriv(t *testing.T) {
 	db := NewCmsDB()
-	defer db.Close()
 
-	priv, err := db.GetPriv("admin")
+	priv, err := db.GetPriv(0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +86,6 @@ func TestAdminPriv(t *testing.T) {
 
 func TestAdminUser(t *testing.T) {
 	db := NewCmsDB()
-	defer db.Close()
 
 	u, err := db.GetUser("admin", 1)
 	if err != nil {
@@ -106,9 +96,8 @@ func TestAdminUser(t *testing.T) {
 
 func TestPutLog(t *testing.T) {
 	db := NewCmsDB()
-	defer db.Close()
 
-	if err := db.PutLog("admin", -1, "testing", "go testing"); err != nil {
+	if err := db.PutLog("admin", "testing", "testing", "go testing"); err != nil {
 		t.Fatal(err)
 	}
 }
