@@ -19,6 +19,8 @@
 !/.gitignore
 
 # 跟踪以下所有文件
+!/module
+
 !/applet
 /applet/*/*
 !/applet/*/*.go
