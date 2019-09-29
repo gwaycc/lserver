@@ -22,8 +22,8 @@ CREATE TABLE cms_user
     -- 主键
     PRIMARY KEY(username)
 );
--- 默认密码LogAdmin123
-INSERT INTO cms_user(username,`passwd`, nickname, gid)VALUES('admin','$2a$10$4B9dd5YdxEHoN/I9LKGJhuheh7pqM2smhO0vXUEWpVeJWNCI0TL0O','系统管理员',0);
+-- 默认密码sha256('LogAdmin123')
+INSERT INTO cms_user(username,`passwd`, nickname, gid)VALUES('admin','$2a$10$3f7/aspeqSfj1Ca0HyoLN.ajL.wG1QO00.RT4ow5EfHMon6sIQa1q','系统管理员',0);
 
 -- 组管理
 CREATE TABLE cms_group

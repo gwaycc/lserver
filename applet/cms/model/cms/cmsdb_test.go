@@ -14,7 +14,11 @@ func TestCmsUser(t *testing.T) {
 	if len(username) > 32 {
 		username = username[len(username)-32:]
 	}
-	if err := db.CreateUser(username, "123456", "test"); err != nil {
+	if err := db.CreateUser(&CmsUser{
+		UserName: username,
+		Passwd:   "123456",
+		NickName: "test",
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.ResetPwd(username, "654321"); err != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"lserver/applet/cms/model/cms"
+	"lserver/module/etc"
 	"lserver/module/gouuid"
 
 	"github.com/dchest/captcha"
@@ -39,18 +40,18 @@ func (uc *UserCache) ToJson() []byte {
 	return data
 }
 
-const cookieKey = "lserver_cms_session"
+var cookieName = etc.Etc.String("applet/cms", "cookie_name")
 
 func (uc *UserCache) SetToSession(c echo.Context) error {
-	sessionName := gouuid.New()
+	token := gouuid.New()
 	// 保存到cookies中
 	cookie := new(http.Cookie)
-	cookie.Name = cookieKey
-	cookie.Value = XXTeaEncode(sessionName)
+	cookie.Name = cookieName
+	cookie.Value = token
 	cookie.Path = "/"
 	cookie.Expires = time.Now().Add(1 * 60 * 60 * time.Second)
 	// 存储在线授权信息
-	if err := redisClient.Set(sessionName, uc, 1*60*60); err != nil {
+	if err := redisClient.Set(token, uc, 1*60*60); err != nil {
 		return errors.As(err)
 	}
 	if err := redisClient.Set("lservercms_"+uc.UserName, uc.OnlineKey, 1*60*60); err != nil {
@@ -73,7 +74,7 @@ func (uc *UserCache) ReAuth(passwd string) bool {
 	return u.CheckSumPasswd(passwd)
 }
 func GetUserCache(c echo.Context) *UserCache {
-	uCookie, err := c.Cookie(cookieKey)
+	uCookie, err := c.Cookie(cookieName)
 	if err != nil {
 		if err != http.ErrNoCookie {
 			log.Warn(errors.As(err))
@@ -81,11 +82,7 @@ func GetUserCache(c echo.Context) *UserCache {
 		return nil
 	}
 
-	sessionName := ""
-	if err := XXTeaDecode(uCookie.Value, &sessionName); err != nil {
-		log.Debug(errors.As(err))
-		return nil
-	}
+	sessionName := uCookie.Value
 	uc := &UserCache{}
 	if err := redisClient.Scan(sessionName, uc); err != nil {
 		log.Warn(errors.As(err))

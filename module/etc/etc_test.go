@@ -5,4 +5,5 @@ import (
 )
 
 func TestEtc(t *testing.T) {
+	Etc.GetString("applet/cms", "cookie_name")
 }

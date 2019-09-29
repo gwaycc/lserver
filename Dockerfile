@@ -6,8 +6,8 @@ RUN apk add --update ca-certificates beanstalkd redis
 RUN mkdir -p /app/var/beanstalkd/
 RUN mkdir -p /app/var/redis/
 RUN mkdir -p /app/var/log/
-COPY $PRJ_ROOT/bin/docker/bsa /usr/bin/
-COPY $PRJ_ROOT/bin/docker/supd /usr/bin/
+COPY $PRJ_ROOT/bin/bsa /usr/bin/
+COPY $PRJ_ROOT/bin/supd /usr/bin/
 COPY $PRJ_ROOT/publish/lserver/ /app
 
 EXPOSE 11300
