@@ -163,10 +163,10 @@
           HttpService.post(
             "/app/cms/user/create", {
               userName: $scope.userName,
-              userPwd: $scope.userPwd,
+              userPwd: sha256($scope.userPwd),
               nickName: $scope.nickName,
               gid: $scope.gid,
-              authPwd: $scope.authPwd
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {
@@ -204,8 +204,8 @@
           HttpService.post(
             "/app/cms/user/pwd", {
               userName: $scope.userName,
-              userPwd: $scope.userPwd,
-              authPwd: $scope.authPwd
+              userPwd: sha256($scope.userPwd),
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {
@@ -243,7 +243,7 @@
               userName: $scope.userName,
               gid: $scope.gid,
               memo: $scope.memo,
-              authPwd: $scope.authPwd
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {
@@ -275,7 +275,7 @@
             "/app/cms/user/delete", {
               userName: $scope.userName,
               memo: $scope.memo,
-              authPwd: $scope.authPwd
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {
@@ -416,7 +416,7 @@
             "/app/cms/group/create", {
               name: $scope.name,
               memo: $scope.memo,
-              authPwd: $scope.authPwd
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {
@@ -454,7 +454,7 @@
               gid: $scope.gid,
               name: $scope.name,
               memo: $scope.memo,
-              authPwd: $scope.authPwd
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {
@@ -487,7 +487,7 @@
             "/app/cms/group/delete", {
               gid: $scope.gid,
               memo: $scope.memo,
-              authPwd: $scope.authPwd
+              authPwd: sha256($scope.authPwd)
             },
             function(data) {
               MsgService.openConfirm("操作成功", function() {

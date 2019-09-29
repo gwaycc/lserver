@@ -42,7 +42,7 @@
 
         HttpService.post("/access/signin", {
             "acc": vm.acc,
-            "pwd": vm.pwd,
+            "pwd": sha256(vm.pwd),
             "vcodeId": vm.vcodeId,
             "vcodeData": vm.vcodeData
           },
@@ -115,8 +115,8 @@
           return;
         }
         HttpService.post("/access/pwd", {
-            oldPwd: $scope.oldPwd,
-            newPwd: $scope.newPwd
+            oldPwd: sha256($scope.oldPwd),
+            newPwd: sha256($scope.newPwd)
           },
           function(data) {
             MsgService.openConfirm("修改成功", function() {

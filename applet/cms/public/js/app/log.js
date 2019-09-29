@@ -262,7 +262,7 @@
             nickName: $scope.nickName,
             mobile: $scope.mobile,
             email: $scope.email,
-            authPwd: $scope.authPwd
+            authPwd: sha256($scope.authPwd)
           },
           function(data) {
             MsgService.openConfirm("操作成功", function() {
@@ -305,7 +305,7 @@
             nickName: $scope.nickName,
             mobile: $scope.mobile,
             email: $scope.email,
-            authPwd: $scope.authPwd
+            authPwd: sha256($scope.authPwd)
           },
           function(data) {
             MsgService.openConfirm("操作成功", function() {
@@ -336,7 +336,7 @@
         HttpService.post(
           "/app/log/alertor/del", {
             nickName: $scope.nickName,
-            authPwd: $scope.authPwd
+            authPwd: sha256($scope.authPwd)
           },
           function(data) {
             MsgService.openConfirm("操作成功", function() {
@@ -440,7 +440,7 @@
             smtpPort: $scope.smtpPort,
             mAuthName: $scope.mAuthName,
             mAuthPwd: $scope.mAuthPwd,
-            authPwd: $scope.authPwd
+            authPwd: sha256($scope.authPwd)
           },
           function(data) {
             MsgService.openConfirm("操作成功", function() {

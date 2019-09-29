@@ -60,6 +60,7 @@ cat js/libs/bootstrap.min.js >> app.min.js|exit 1
 cat js/libs/angular-datepicker.js >> app.min.js|exit 1
 cat js/libs/angular-validation.js >> app.min.js|exit 1
 cat js/libs/angular-validation-rule.js >> app.min.js|exit 1
+cat js/libs/sha256.js >> app.min.js|exit 1
 cat js/app/services.js >> app.min.js|exit 1
 cat js/app/filters.js >> app.min.js|exit 1
 cat js/app/directives.js >> app.min.js|exit 1

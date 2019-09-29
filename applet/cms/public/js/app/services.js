@@ -217,7 +217,7 @@ angular
                     // export=1为标识，memo为备注
                     params.export = 1; // 专用的参数
                     params.memo = $scope.memo; // 专用的数据
-                    params.authPwd = $scope.authPwd;
+                    params.authPwd = sha256($scope.authPwd);
                     // 请求导出
                     HttpService.post(url, params, function(data) {
                       MsgService.openConfirm('请求成功，请在数据导出的"任务列表"中查看状态', function() {
